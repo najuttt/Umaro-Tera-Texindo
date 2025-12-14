@@ -25,7 +25,7 @@
   </div>
 
   {{-- ======================== --}}
-  {{-- 📊 RINGKASAN GRAFIK + KARTU --}}
+  {{-- 📊 RINGKASAN GRAFIK --}}
   {{-- ======================== --}}
   <div class="row g-4 mb-4 align-items-stretch">
 
@@ -33,7 +33,7 @@
       <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden">
         <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
           <div>
-            <h6 class="text-muted mb-1">Perbandingan Barang Masuk & Keluar</h6>
+            <h6 class="text-muted mb-1">Trend Barang Masuk</h6>
             <h5 class="fw-bold mb-0 text-dark">Statistik Barang</h5>
           </div>
 
@@ -100,112 +100,72 @@
   </div>
 
   {{-- ======================== --}}
-  {{-- 📦 BARANG MASUK / KELUAR / KEDALUWARSA / HABIS --}}
+  {{-- 📦 BARANG MASUK & HAMPIR HABIS --}}
   {{-- ======================== --}}
   <div class="row g-4">
     @php
       $sections = [
         ['title' => 'Barang Masuk', 'icon' => 'ri-box-3-line', 'color' => '#2ecc71', 'badge' => 'bg-success-subtle text-success', 'data' => $itemIns, 'empty' => 'Belum ada data barang masuk'],
-        ['title' => 'Barang Keluar', 'icon' => 'ri-logout-box-line', 'color' => '#e74c3c', 'badge' => 'bg-danger-subtle text-danger', 'data' => $itemOuts, 'empty' => 'Belum ada data barang keluar'],
-        ['title' => 'Hampir Kedaluwarsa', 'icon' => 'ri-alarm-warning-line', 'color' => '#FFC300', 'badge' => 'bg-warning text-dark', 'data' => $expiredSoon, 'empty' => 'Tidak ada barang hampir kedaluwarsa'],
         ['title' => 'Hampir Habis', 'icon' => 'ri-alert-line', 'color' => '#FF9800', 'badge' => 'bg-danger-subtle text-danger', 'data' => $lowStockItems, 'empty' => 'Tidak ada barang hampir habis'],
       ];
     @endphp
 
     @foreach($sections as $sec)
-        <div class="col-xl-3 col-md-6">
+        <div class="col-xl-6 col-md-6">
             <div class="card shadow-sm h-100 border-0 rounded-3 smooth-fade">
             <div class="card-body">
-                <h5 class="fw-bold mb-3"><i class="{{ $sec['icon'] }} me-1" style="color:{{ $sec['color'] }};"></i> {{ $sec['title'] }}</h5>
-                <ul class="list-unstyled mb-0">
+                <h5 class="fw-bold mb-3">
+                    <i class="{{ $sec['icon'] }} me-1" style="color:{{ $sec['color'] }};"></i>
+                    {{ $sec['title'] }}
+                </h5>
 
+                <ul class="list-unstyled mb-0">
                 @forelse($sec['data'] as $item)
 
                     @php
                         $nama = $item->item->name ?? $item->name ?? '-';
                         $qty = $item->quantity ?? null;
                         $stok = $item->stock ?? null;
-                        $tanggal = isset($item->created_at) ? $item->created_at->format('d M Y') : '-';
+                        $tanggal = $item->created_at ? $item->created_at->format('d M Y') : '-';
                         $badgeValue = $qty ?? $stok ?? '-';
                     @endphp
 
                     <li class="d-flex mb-3 align-items-center pb-2 border-bottom justify-content-between">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1 fw-semibold">{{ $nama }}</h6>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-semibold">{{ $nama }}</h6>
 
-                        <small class="text-muted d-block">
-                        @if($qty !== null)
-                            Jumlah: {{ $qty }}<br>
-                        @endif
+                            <small class="text-muted d-block">
+                                @if($qty !== null)
+                                    Jumlah: {{ $qty }}<br>
+                                @endif
 
-                        @if($stok !== null)
-                            Stok tersisa: {{ $stok }}<br>
-                        @endif
+                                @if($stok !== null)
+                                    Stok tersisa: {{ $stok }}<br>
+                                @endif
 
-                        Tanggal: {{ $tanggal }}
-                        </small>
-                    </div>
+                                Tanggal: {{ $tanggal }}
+                            </small>
+                        </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge {{ $sec['badge'] }}">{{ $badgeValue }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge {{ $sec['badge'] }}">{{ $badgeValue }}</span>
 
-                        {{-- TOMBOL CARI SUDAH DITAMBAHKAN UNTUK 3 JENIS --}}
-                        @if(
-                            $sec['title'] === 'Barang Masuk' ||
-                            $sec['title'] === 'Hampir Kedaluwarsa' ||
-                            $sec['title'] === 'Hampir Habis'
-                        )
                             <a href="{{ route('super_admin.item_ins.index', ['search' => $nama]) }}"
                                 class="btn btn-sm btn-outline-warning rounded-pill px-3 py-1">
                                 Cari
                             </a>
-                        @endif
-                    </div>
+                        </div>
                     </li>
 
                 @empty
                     <li class="text-muted fst-italic">{{ $sec['empty'] }}</li>
                 @endforelse
-
                 </ul>
+
             </div>
             </div>
         </div>
     @endforeach
-  </div>
-
-  {{-- ======================== --}}
-  {{-- 👥 PENGGUNA TERATAS --}}
-  {{-- ======================== --}}
-  <div class="col-12 mt-5">
-    <div class="card shadow-sm border-0 rounded-3 overflow-hidden smooth-fade">
-      <div class="card-header d-flex justify-content-between align-items-center bg-white">
-        <h5 class="fw-bold mb-0"><i class="bi bi-handbag-fill me-2" style="color:#FF9800;"></i> 5 Pengguna Paling Sering Mengambil Barang</h5>
-        <small class="text-muted">Berdasarkan jumlah pengambilan barang</small>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Pengguna</th>
-              <th>Email</th>
-              <th>Peran</th>
-              <th>Total Pengambilan</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach ($topUsers as $data)
-              <tr>
-                <td><h6 class="mb-0">{{ $data->name }}</h6></td>
-                <td>{{ $data->email ?? '-' }}</td>
-                <td><span class="badge bg-label-warning rounded-pill">{{ ucfirst($data->role ?? 'Guest') }}</span></td>
-                <td><span class="fw-semibold text-dark">{{ $data->total_out }}</span></td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    </div>
   </div>
 
 </div>
@@ -221,6 +181,8 @@
 .breadcrumb-link{position:relative;transition:all 0.25s ease;}
 .breadcrumb-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:#FF9800;transition:width 0.25s ease;}
 .breadcrumb-link:hover::after{width:100%;}
+.spin-refresh{animation:spin 0.7s linear infinite;}
+@keyframes spin {100%{transform:rotate(360deg);}}
 </style>
 
 @endsection
@@ -229,13 +191,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx=document.getElementById('overviewChart').getContext('2d');
+
 const chartData={
-  daily:{labels:@json($dailyLabels),masuk:@json($dailyMasuk),keluar:@json($dailyKeluar)},
-  weekly:{labels:@json($weeklyLabels),masuk:@json($weeklyMasuk),keluar:@json($weeklyKeluar)},
-  monthly:{labels:@json($monthlyLabels),masuk:@json($monthlyMasuk),keluar:@json($monthlyKeluar)},
-  triwulan:{labels:@json($triwulanLabels),masuk:@json($triwulanMasuk),keluar:@json($triwulanKeluar)},
-  semester:{labels:@json($semesterLabels),masuk:@json($semesterMasuk),keluar:@json($semesterKeluar)},
-  yearly:{labels:@json($yearlyLabels),masuk:@json($yearlyMasuk),keluar:@json($yearlyKeluar)}
+  daily:{labels:@json($dailyLabels),masuk:@json($dailyMasuk)},
+  weekly:{labels:@json($weeklyLabels),masuk:@json($weeklyMasuk)},
+  monthly:{labels:@json($monthlyLabels),masuk:@json($monthlyMasuk)},
+  triwulan:{labels:@json($triwulanLabels),masuk:@json($triwulanMasuk)},
+  semester:{labels:@json($semesterLabels),masuk:@json($semesterMasuk)},
+  yearly:{labels:@json($yearlyLabels),masuk:@json($yearlyMasuk)}
 };
 
 let currentPeriod='weekly';
@@ -245,8 +208,15 @@ const itemChart=new Chart(ctx,{
   data:{
     labels:chartData[currentPeriod].labels,
     datasets:[
-      {label:'Barang Masuk',data:chartData[currentPeriod].masuk,borderColor:'#FF9800',backgroundColor:'rgba(255,193,7,0.25)',borderWidth:2,fill:true,tension:0.35},
-      {label:'Barang Keluar',data:chartData[currentPeriod].keluar,borderColor:'#e74c3c',backgroundColor:'rgba(231,76,60,0.25)',borderWidth:2,fill:true,tension:0.35}
+      {
+        label:'Barang Masuk',
+        data:chartData[currentPeriod].masuk,
+        borderColor:'#FF9800',
+        backgroundColor:'rgba(255,193,7,0.25)',
+        borderWidth:2,
+        fill:true,
+        tension:0.35
+      }
     ]
   },
   options:{
@@ -273,32 +243,21 @@ document.querySelectorAll('[data-period]').forEach(btn=>{
 function updateChart(newData){
   itemChart.data.labels=newData.labels;
   itemChart.data.datasets[0].data=newData.masuk;
-  itemChart.data.datasets[1].data=newData.keluar;
   itemChart.update();
 }
 
 // ===============================
-// 🔄 BUTTON REFRESH (FINAL)
+// 🔄 BUTTON REFRESH
 // ===============================
 document.addEventListener("DOMContentLoaded", function () {
     const refreshBtn = document.getElementById('refreshBtn');
-
     if (refreshBtn) {
         refreshBtn.addEventListener('click', function () {
-
             const icon = this.querySelector("i");
             const text = this.querySelector("span");
-
-            // Animasi muter
             icon.classList.add("spin-refresh");
-
-            // Disable tombol
             refreshBtn.setAttribute("disabled", true);
-
-            // Ubah text
             text.innerText = "Merefresh...";
-
-            // Reload otomatis
             setTimeout(() => location.reload(), 700);
         });
     }

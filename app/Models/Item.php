@@ -51,6 +51,11 @@ class Item extends Model
         return $this->hasMany(Item_out::class, 'item_id');
     }
 
+    public function orderitem()
+    {
+        return $this->hasMany(OrderItem::class, 'item_id');
+    }
+
     public function itemOutsguest()
     {
         return $this->hasMany(Item_out_guest::class, 'item_id');

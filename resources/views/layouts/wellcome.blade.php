@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Selamat Datang di SIMBA</title>
+    <title>Selamat Datang di UMARO</title>
 
     <!-- 🧩 Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/icons/simba.png') }}" />
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/icons/logo1.jpeg') }}" />
 
     <!-- 🖋️ Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -206,8 +206,8 @@
 
         <!-- Brand -->
         <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-            <img src="{{ asset('assets/img/icons/simba.png') }}" alt="Logo SIMBA" class="navbar-logo">
-            <span class="brand-text">SIMBA</span>
+            <img src="{{ asset('assets/img/icons/logo4.png') }}" alt="Logo SIMBA" class="navbar-logo">
+            <span class="brand-text">UMARO</span>
         </a>
 
         <!-- Toggler -->
@@ -221,7 +221,6 @@
             <li class="nav-item"><a class="nav-link active" href="#awal">Beranda</a></li>
             <li class="nav-item"><a class="nav-link" href="#about">Tentang</a></li>
             <li class="nav-item"><a class="nav-link" href="#stats">Statistik</a></li>
-            <li class="nav-item"><a class="nav-link" href="#tutorial">Panduan</a></li>
             <li class="nav-item"><a class="nav-link" href="#lokasi">Lokasi</a></li>
             </ul>
             <a href="{{ route('login') }}" class="btn-login ms-lg-4 mt-3 mt-lg-0">
@@ -239,31 +238,41 @@
     <!-- FOOTER -->
     <footer class="footer-section text-white mt-5">
         <div class="container py-4">
-        <div class="row justify-content-between align-items-center text-center text-md-start">
-            <div class="col-md-6 mb-3 mb-md-0 d-flex flex-column flex-md-row align-items-center gap-3">
-            <img src="{{ asset('assets/img/icons/upelkes.png') }}"
-                alt="Logo UPTD Pelatihan Kesehatan"
-                class="footer-logo img-fluid">
-            <div class="text-md-start text-center">
-                <h5 class="fw-bold mb-1">UPTD Pelatihan Kesehatan</h5>
-                <p class="mb-0 small">Jl. Pasteur No.31, Pasir Kaliki, Kec. Cicendo, Kota Bandung, Jawa Barat 40171</p>
-            </div>
+            <div class="row justify-content-between align-items-center text-center text-md-start">
+
+                <!-- KIRI -->
+                <div class="col-md-6 mb-3 mb-md-0 d-flex flex-column flex-md-row align-items-center gap-3">
+                    <img src="{{ asset('assets/img/icons/logo3.png') }}"
+                        alt="Logo"
+                        class="footer-logo img-fluid">
+                    <div class="text-md-start text-center">
+                        <h5 class="fw-bold mb-1">Umaro Tera Texindo</h5>
+                        <p class="mb-0 small">
+                            Ruko Parahyangan, Sukawangi Kaler Ruko Parahyangan No.3, Jelegong, Kec. Kutawaringin, Kabupaten Bandung, Jawa Barat 40911
+                        </p>
+                    </div>
+                </div>
+
+                <!-- KANAN (Shopee Only) -->
+                <div class="col-md-5 text-md-end">
+                    <div class="d-flex justify-content-center justify-content-md-end">
+                        <a href="https://shopee.co.id/search?keyword=teman%20jarum"
+                        target="_blank"
+                        class="d-flex align-items-center gap-2 px-3 py-2"
+                        style="background:#ee4d2d; border-radius:10px; color:white; font-weight:600; text-decoration:none;">
+                            <i class="bi bi-bag-fill"></i>
+                            Shopee
+                        </a>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="col-md-5 text-md-end">
-            <h6 class="fw-semibold mb-2">Ikuti Kami</h6>
-            <div class="d-flex justify-content-center justify-content-md-end gap-3 fs-4">
-                <a href="https://www.instagram.com/upelkes_jabar/" target="_blank" class="text-white" title="Instagram"><i class="bi bi-instagram"></i></a>
-                <a href="https://www.tiktok.com/@upelkes_jabar/" target="_blank" class="text-white" title="TikTok"><i class="bi bi-tiktok"></i></a>
-                <a href="https://www.youtube.com/upelkes_jabar" target="_blank" class="text-white" title="YouTube"><i class="bi bi-youtube"></i></a>
-            </div>
-            </div>
-        </div>
+            <hr class="border-light opacity-75 mt-4 mb-3">
 
-        <hr class="border-light opacity-75 mt-4 mb-3">
-        <div class="text-center small">
-            <p class="mb-0">© {{ date('Y') }} <strong>SIMBA</strong> — Sistem Informasi Manajemen Barang. All rights reserved.</p>
-        </div>
+            <div class="text-center small">
+                <p class="mb-0">© {{ date('Y') }} <strong>UMARO</strong> — All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
@@ -321,6 +330,6 @@
         AOS.init({ duration: 900, once: true, easing: 'ease-in-out' });
     </script>
 
-    @stack('scripts')
+@yield('scripts')
     </body>
     </html>

@@ -138,6 +138,31 @@
       height: 180px; /* versi mobile sedikit lebih kecil */
     }
   }
+
+  /* === Pagination Navy Style === */
+.pagination .page-link {
+    color: #0B2447; /* Navy text */
+    border-radius: 8px;
+    border: 1px solid #0B2447;
+    transition: 0.25s;
+}
+
+.pagination .page-link:hover {
+    background-color: #0B2447;
+    color: #fff !important;
+}
+
+.pagination .active .page-link {
+    background-color: #0B2447 !important;
+    border-color: #0B2447 !important;
+    color: #fff !important;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #A9B4C2;
+    border-color: #A9B4C2;
+}
+
 </style>
 
 <!-- 🧭 Breadcrumb -->
@@ -252,22 +277,6 @@
           <p class="small mb-3"><i class="bi bi-box me-1"></i> Stok:
             <span class="fw-semibold {{ $item->stock == 0 ? 'text-danger' : 'text-success' }}">{{ $item->stock }}</span>
           </p>
-
-          <form action="{{ route('pegawai.permintaan.create') }}" method="POST" class="mt-auto">
-            @csrf
-            <input type="hidden" name="items[0][item_id]" value="{{ $item->id }}">
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="input-group" style="max-width: 110px;">
-                <input type="number" name="items[0][quantity]" class="form-control text-center border-warning"
-                  value="1" min="1" {{ $item->stock == 0 ? 'disabled' : '' }}>
-              </div>
-              <button type="submit"
-                class="btn btn-sm btn-primary ms-2 d-flex align-items-center shadow-sm"
-                {{ $item->stock == 0 ? 'disabled' : '' }}>
-                <i class="bi bi-cart-plus me-1"></i> Ajukan
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </div>

@@ -128,132 +128,16 @@
                     <i class="ri-more-2-fill fs-5 text-muted"></i>
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-1">
-
-                    <li>
-                      <a class="dropdown-item d-flex align-items-center"
-                        data-bs-toggle="modal" data-bs-target="#detailModal{{ $item->id }}">
-                        <i class="ri-eye-line me-2 text-warning"></i> Detail
-                      </a>
-                    </li>
-
                     <li>
                       <a class="dropdown-item d-flex align-items-center"
                         href="{{ route('super_admin.items.show',$item->id) }}">
-                        <i class="ri-eye-line me-2 text-primary"></i> Lihat
+                        <i class="ri-eye-line me-2 text-warning"></i> Lihat
                       </a>
                     </li>
-
                   </ul>
                 </div>
               </td>
             </tr>
-
-            {{-- ======================== --}}
-            {{-- 🪄 MODAL DETAIL --}}
-            {{-- ======================== --}}
-            <div class="modal fade" id="detailModal{{ $item->id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-
-                  <div class="modal-header text-white py-2"
-                    style="background:linear-gradient(90deg,#FF9800,#FFB300);">
-                    <h5 class="modal-title fw-semibold">
-                      <i class="ri-archive-line me-2"></i> Detail Barang — {{ $item->name }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white"
-                      data-bs-dismiss="modal"></button>
-                  </div>
-
-                  <div class="modal-body bg-light">
-
-                    <div class="row">
-                      <div class="col-md-6">
-                        <p><strong>Kategori:</strong> {{ $item->category->name ?? '-' }}</p>
-                        <p><strong>Satuan:</strong> {{ $item->unit->name ?? '-' }}</p>
-                        <p><strong>Supplier:</strong> {{ $item->supplier->name ?? '-' }}</p>
-                      </div>
-
-                      <div class="col-md-6">
-                        <p><strong>Harga:</strong> Rp {{ number_format($item->price) }}</p>
-                        <p><strong>Stok:</strong> {{ $item->stock }}</p>
-                        <p><strong>Dibuat:</strong> {{ $item->created_at->format('d M Y') }}</p>
-                      </div>
-                    </div>
-
-                    <hr>
-
-                    <h6 class="fw-bold mb-2"><i class="ri-barcode-line me-1"></i> Barcode</h6>
-
-                    <div class="text-center">
-                      @if($item->barcode_png_base64)
-                        <img src="{{ $item->barcode_png_base64 }}"
-                             class="img-fluid p-2 bg-white shadow-sm border rounded"
-                             style="max-width:230px;">
-                        <p class="text-muted mt-2 small">{{ $item->code }}</p>
-                      @else
-                        <p class="text-muted">Barcode tidak tersedia.</p>
-                      @endif
-                    </div>
-
-                    <hr>
-
-                    <h6 class="fw-bold mb-1">Deskripsi</h6>
-                    <p class="text-muted">{{ $item->description ?? 'Tidak ada deskripsi.' }}</p>
-
-                  </div>
-                  {{-- ======================== --}}
-                  {{-- FOOTER MODAL (CETAK, EDIT, DELETE) --}}
-                  {{-- ======================== --}}
-                  <div class="modal-footer bg-white border-0 d-flex flex-wrap justify-content-between">
-
-                    {{-- FORM CETAK BARCODE --}}
-                    <form action="{{ route('super_admin.items.barcode.pdf', $item->id) }}"
-                          method="GET" target="_blank"
-                          class="d-flex align-items-center gap-2 flex-wrap">
-
-                      <div class="input-group input-group-sm" style="width:130px;">
-                        <span class="input-group-text bg-white border-end-0 px-2">
-                          <i class="ri-hashtag text-warning fs-6"></i>
-                        </span>
-                        <input type="number" name="jumlah" min="1" value="1"
-                               class="form-control form-control-sm border-start-0 text-center fw-semibold"
-                               placeholder="Qty">
-                      </div>
-
-                      <button type="submit"
-                        class="btn btn-sm btn-outline-warning rounded-3 d-flex align-items-center px-3">
-                        <i class="ri-printer-line me-1"></i> Cetak
-                      </button>
-                    </form>
-
-                    {{-- EDIT / HAPUS --}}
-                    <div class="d-flex align-items-center gap-2">
-
-                      {{-- EDIT --}}
-                      <a href="{{ route('super_admin.items.edit', $item->id) }}"
-                         class="btn btn-sm btn-outline-warning rounded-3 d-flex align-items-center px-3">
-                        <i class="ri-pencil-line me-1"></i> Edit
-                      </a>
-
-                      {{-- DELETE --}}
-                      <form action="{{ route('super_admin.items.destroy', $item->id) }}" method="POST"
-                            onsubmit="return confirm('Yakin ingin hapus barang ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                          class="btn btn-sm btn-outline-danger rounded-3 d-flex align-items-center px-3">
-                          <i class="ri-delete-bin-6-line me-1"></i> Hapus
-                        </button>
-                      </form>
-                    </div>
-
-                  </div> {{-- END MODAL FOOTER --}}
-
-                </div>
-              </div>
-            </div>
-            {{-- END MODAL DETAIL --}}
-
             @empty
             <tr>
               <td colspan="7" class="text-center py-4 text-muted">

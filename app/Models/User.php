@@ -31,9 +31,9 @@ class User extends Authenticatable
 
     // ========= RELASI =========
 
-    public function guests()
+    public function orders()
     {
-        return $this->hasMany(Guest::class, 'created_by');
+        return $this->hasMany(Order::class, 'created_by');
     }
 
     public function items()

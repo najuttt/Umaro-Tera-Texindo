@@ -34,7 +34,7 @@
     <meta name="description" content="" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{asset('assets/img/icons/simba.png')}}" />
+    <link rel="icon" type="image/x-icon" href="{{asset('assets/img/icons/logo1.jpeg')}}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
@@ -162,18 +162,6 @@
       <div class="layout-overlay layout-menu-toggle"></div>
     </div>
     <!-- / Layout wrapper -->
-    <!-- floating cart -->
-    @php
-      $cartsitems = \App\Models\Cart::where('user_id', Auth::id())->where('status', 'active')->with('cartItems.item')->first();
-    @endphp
-    @if(Auth::user()->role === 'pegawai')
-    <a href="#offcanvasCart" class="floating-cart bg-dark" data-bs-toggle="offcanvas" role="button">
-      <i class="ri ri-shopping-cart-2-line fs-3"></i>
-      @if($cartsitems && $cartsitems->cartItems->count() > 0)
-        <span class="badge bg-danger cart-badge">{{ $cartsitems->cartItems->count() }}</span>
-      @endif
-    </a>
-    @endif
     <!-- Core JS -->
 
    <script src="{{asset('assets/vendor/libs/jquery/jquery.js')}}"></script>
@@ -225,6 +213,7 @@
     </script>
     @endif
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    @yield('scripts')
   </body>
   <script src="{{ asset('js/dashboard-modal.js') }}"></script>
 </html>

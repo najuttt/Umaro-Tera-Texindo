@@ -11,10 +11,13 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PermintaanController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\KopSuratController;
+use App\Http\Controllers\PembukuanController;
 use App\Models\Visitor;
 use App\Models\User;
 use App\Http\Controllers\ManualBookController;
+use App\Http\Controllers\Admin\OrderAdminController;
+use App\Http\Controllers\SuperAdmin\OrderSuperAdminController;
+use App\Http\Controllers\RefundRequestController;
 use Illuminate\Support\Facades\Log;
 
 // Role Controllers
@@ -119,15 +122,21 @@ Route::middleware(['auth', 'role:super_admin'])
     ->prefix('super-admin')
     ->as('super_admin.')
     ->group(function () {
-        Route::get('/dashboard', [SuperAdminController::class, 'index'])->name('dashboard');
+
+        // Dashboard
+        Route::get('/dashboard', [SuperAdminController::class, 'index'])
+            ->name('dashboard');
+
         Route::get('/admin/dashboard/modal/{type}', [AdminController::class, 'loadModalData']);
         Route::get('/dashboard/modal/barang_keluar', [AdminController::class, 'barangKeluarModal'])
             ->name('dashboard.modal.barang_keluar');
 
+        // Download template
         Route::get('/items/download-template', [ItemController::class, 'downloadTemplate'])
-        ->name('items.template');
+            ->name('items.template');
+
         Route::get('/suppliers/download-template', [SupplierController::class, 'downloadTemplate'])
-        ->name('suppliers.template');
+            ->name('suppliers.template');
 
         // CRUD Master Data
         Route::resources([
@@ -139,31 +148,77 @@ Route::middleware(['auth', 'role:super_admin'])
             'users'      => UserController::class,
         ]);
 
-        // Import Barang & Supplier
-        Route::post('/items/import', [ItemController::class, 'import'])->name('items.import');
-        Route::post('/suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import');
+        /* ===============================
+         *  ORDER SUPER ADMIN (AMAN)
+         * ===============================*/
+
+        Route::prefix('orders')->as('orders.')->group(function () {
+
+            // List semua order
+            Route::get('/', [OrderSuperAdminController::class, 'index'])
+                ->name('index'); 
+                // super_admin.orders.index
+
+            // Detail order
+            Route::get('/{id}', [OrderSuperAdminController::class, 'show'])
+                ->name('show'); 
+                // super_admin.orders.show
+
+        });
+
+         Route::get('/refunds', [RefundRequestController::class, 'superAdminView'])
+        ->name('refunds');
+
+        // Item out
+        Route::get('item-out', [ItemOutController::class, 'index'])
+            ->name('item_out.index');
+
+        // Import
+        Route::post('/items/import', [ItemController::class, 'import'])
+            ->name('items.import');
+
+        Route::post('/suppliers/import', [SupplierController::class, 'import'])
+            ->name('suppliers.import');
 
         // Barcode
-        Route::get('items/{item}/barcode-pdf', [ItemController::class, 'printBarcode'])->name('items.barcode.pdf');
+        Route::get('items/{item}/barcode-pdf', [ItemController::class, 'printBarcode'])
+            ->name('items.barcode.pdf');
 
-        // Export Barang Masuk / Keluar / Reject
-        Route::get('/export', [ExportController::class, 'index'])->name('export.index');
-        Route::get('/export/barang-masuk/excel', [ExportController::class, 'exportBarangMasukExcel'])->name('exports.barang_masuk.excel');
-        Route::get('/export/barang-masuk/pdf', [ExportController::class, 'exportBarangMasukPdf'])->name('exports.barang_masuk.pdf');
-        Route::get('/export/barang-keluar/excel', [ExportController::class, 'exportBarangKeluarExcel'])->name('exports.barang_keluar.excel');
-        Route::get('/export/barang-keluar/pdf', [ExportController::class, 'exportBarangKeluarPdf'])->name('exports.barang_keluar.pdf');
-        Route::get('/export/barang-reject-improved', [ExportController::class, 'exportBarangRejectExcelImproved'])->name('export.barangRejectImproved');
-        Route::get('/export/barang-reject/pdf', [ExportController::class, 'exportBarangRejectPdf'])->name('exports.barang_reject.pdf');
-        Route::get('/export/download', [ExportController::class, 'download'])->name('export.download');
-        Route::delete('/export/clear', [ExportController::class, 'clearLogs'])->name('export.clear');
+        // Export Menu
+        Route::get('/export', [ExportController::class, 'index'])
+            ->name('export.index');
 
-        // Kop Surat
-        Route::resource('kop_surat', KopSuratController::class);
+        Route::get('/export/order/excel', [ExportController::class, 'exportOrderExcel'])
+                ->name('exports.order.excel');
 
-        //Manualbook
+        Route::get('/export/order/pdf', [ExportController::class, 'exportOrderPdf'])
+                ->name('exports.order.pdf');
+
+        Route::get('/export/barang-masuk/excel', [ExportController::class, 'exportBarangMasukExcel'])
+            ->name('exports.barang_masuk.excel');
+
+        Route::get('/export/barang-masuk/pdf', [ExportController::class, 'exportBarangMasukPdf'])
+            ->name('exports.barang_masuk.pdf');
+
+        Route::get('/export/download', [ExportController::class, 'download'])
+            ->name('export.download');
+
+        Route::delete('/export/clear', [ExportController::class, 'clearLogs'])
+            ->name('export.clear');
+
+        Route::get('/pembukuan', [PembukuanController::class, 'index'])->name('pembukuan.index');
+        Route::prefix('pembukuan')->name('pembukuan.')->group(function () {
+            Route::get('/', [PembukuanController::class, 'index'])->name('index');
+            Route::post('/hpp', [PembukuanController::class, 'storeHpp'])->name('storeHpp');
+            Route::post('/expense', [PembukuanController::class, 'storeExpense'])->name('storeExpense');
+            Route::get('/export', [PembukuanController::class, 'export'])->name('export');
+        });
+
+        // Manualbook
         Route::get('/manual-book', [ManualBookController::class, 'index'])
-        ->name('manual_book.index');
-});
+            ->name('manual_book.index');
+    });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -175,52 +230,76 @@ Route::middleware(['auth', 'role:admin'])
     ->as('admin.')
     ->group(function () {
 
-    // Dashboard Admin
+    /* ==========================
+     * Dashboard Admin
+     * ========================== */
     Route::controller(AdminController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
-        Route::get('/dashboard/data', 'getChartData');
+        Route::get('/dashboard/data', 'getChartData')->name('dashboard.data');
         Route::get('/dashboard/modal/{type}', 'loadModalData')->name('dashboard.modal.data');
         Route::get('/dashboard/modal/barang_keluar', 'barangKeluarModal')->name('dashboard.modal.barang_keluar');
     });
 
-    // Barang Keluar
+
+    /* ==========================
+     * Barang Keluar
+     * ========================== */
     Route::controller(ItemoutController::class)->group(function () {
         Route::get('/itemout/search', 'search')->name('itemout.search');
+
         Route::resource('itemout', ItemoutController::class);
+
         Route::get('/itemout/{cart}/struk', 'struk')->name('itemout.struk');
-        Route::post('/itemout/scan/{cart}', 'scan')->name('itemout.scan');
-        Route::get('/itemout/check-all-scanned/{cart}', 'checkAllScanned')->name('itemout.checkAllScanned');
-        Route::post('/itemout/release/{cart}', 'release')->name('itemout.release');
+        Route::post('/itemout/{cart}/scan', 'scan')->name('itemout.scan');
+        Route::get('/itemout/{cart}/check-all-scanned', 'checkAllScanned')->name('itemout.checkAllScanned');
+        Route::post('/itemout/{cart}/release', 'release')->name('itemout.release');
     });
 
-    // Request & Cart
+
+    /* ==========================
+     * Request & Carts
+     * ========================== */
     Route::controller(RequestController::class)->group(function () {
         Route::get('/request', 'index')->name('request');
         Route::get('/request/search', 'search')->name('request.search');
+
         Route::get('/carts/{id}', 'show')->name('carts.show');
         Route::patch('/carts/{id}', 'update')->name('carts.update');
+
         Route::patch('/carts/item/{id}/approve', 'approveItem')->name('carts.item.approve');
         Route::patch('/carts/item/{id}/reject', 'rejectItem')->name('carts.item.reject');
+
         Route::post('/carts/{id}/bulk-update', 'bulkUpdate')->name('carts.bulkUpdate');
     });
 
-    // Guest Management
+
+    /* ==========================
+     * Guest Management
+     * ========================== */
     Route::controller(SearchController::class)->group(function () {
         Route::get('/guests/search', 'searchGuests')->name('guests.search');
     });
+
     Route::resource('guests', GuestController::class)->except('show');
 
-    // Pegawai Management
+
+    /* ==========================
+     * Pegawai Management
+     * ========================== */
+    Route::resource('pegawai', AdminPegawaiController::class);
+
     Route::controller(AdminPegawaiController::class)->group(function () {
-        Route::resource('pegawai', AdminPegawaiController::class);
-        Route::get('/pegawai/{id}/produk', 'showProduk')->name('pegawai.produk'); // Perbaiki nama route
-        Route::post('/pegawai/{id}/scan', 'scan')->name('pegawai.scan'); // Perbaiki nama route
-        Route::get('/pegawai/{id}/cart', 'showCart')->name('pegawai.cart'); // Perbaiki nama route
+        Route::get('/pegawai/{id}/produk', 'showProduk')->name('pegawai.produk');
+        Route::post('/pegawai/{id}/scan', 'scan')->name('pegawai.scan');
+        Route::get('/pegawai/{id}/cart', 'showCart')->name('pegawai.cart');
         Route::delete('/pegawai/{pegawai}/cart/item/{id}', 'destroyCartItem')->name('pegawai.cart.item.destroy');
-        Route::post('/pegawai/{id}/cart/save', 'saveCartToItemOut')->name('pegawai.cart.save'); // Perbaiki nama route
+        Route::post('/pegawai/{id}/cart/save', 'saveCartToItemOut')->name('pegawai.cart.save');
     });
 
-    // Produk Guest
+
+    /* ==========================
+     * Produk Guest
+     * ========================== */
     Route::controller(ProdukController::class)->group(function () {
         Route::get('/produk', 'index')->name('produk.index');
         Route::get('/produk/guest/{id}', 'showByGuest')->name('produk.byGuest');
@@ -231,25 +310,37 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/produk/guest/{id}/cart/item/{itemId}', 'destroy')->name('produk.cart.remove');
     });
 
-    // Export Barang Keluar
+
+    /* ==========================
+     * Export Barang Keluar
+     * ========================== */
     Route::controller(ExportController::class)->group(function () {
         Route::get('/out', 'exportOut')->name('export.out');
         Route::post('/out/clear', 'clearOutHistory')->name('export.out.clear');
+
         Route::get('/export/barang-keluar/excel', 'exportBarangKeluarExcelAdmin')->name('barang_keluar.excel');
         Route::get('/export/barang-keluar/pdf', 'exportBarangKeluarPdfAdmin')->name('barang_keluar.pdf');
     });
 
-    // Transaksi & Refund
+
+    /* ==========================
+     * Transaksi & Refund
+     * ========================== */
     Route::controller(TransaksiItemOutController::class)->group(function () {
         Route::get('/transaksi', 'index')->name('transaksi.out');
         Route::get('/transaksi/search', 'index')->name('transaksi.search');
+
         Route::post('/refund', 'refundBarang')->name('pegawai.refund');
         Route::post('/edit-item', 'updateItem')->name('pegawai.updateItem');
+
         Route::post('/guest/refund', 'refundBarangGuest')->name('guest.refund');
         Route::post('/guest/edit-item', 'updateItemGuest')->name('guest.updateItem');
     });
 
-    // Reject Barang
+
+    /* ==========================
+     * Reject Barang
+     * ========================== */
     Route::controller(RejectController::class)->group(function () {
         Route::get('/rejects/search', 'search')->name('rejects.search');
         Route::get('/rejects', 'index')->name('rejects.index');
@@ -258,8 +349,38 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/rejects/check/{barcode}', 'checkBarcode')->name('rejects.check');
     });
 
-     Route::get('/manual-book', [ManualBookAdminController::class, 'index'])->name('manual_book.index');
+
+    /* ==========================
+     * ORDER ADMIN
+     * ========================== */
+        Route::get('/orders', [OrderAdminController::class, 'index'])
+            ->name('orders.index');
+
+        Route::get('/orders/{order}', [OrderAdminController::class, 'show'])
+            ->name('orders.show');
+
+        Route::post('/orders/{order}/approve', [OrderAdminController::class, 'approve'])->name('orders.approve');
+        Route::post('/orders/{order}/reject', [OrderAdminController::class, 'reject'])->name('orders.reject');
+
+        Route::post('/orders/{order}/status', [OrderAdminController::class, 'updateStatus'])
+            ->name('orders.updateStatus');
+
+        Route::get('/refunds', [RefundRequestController::class, 'index'])
+            ->name('refunds');
+
+        Route::post('/refunds/{id}/approve', [RefundRequestController::class, 'approve'])
+            ->name('refunds.approve');
+
+        Route::post('/refunds/{id}/reject', [RefundRequestController::class, 'reject'])
+            ->name('refunds.reject');
+
+    /* ==========================
+     * Manual Book
+     * ========================== */
+    Route::get('/manual-book', [ManualBookAdminController::class, 'index'])
+        ->name('manual_book.index');
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -306,9 +427,49 @@ Route::middleware(['auth'])->get('/dashboard', function () {
     abort(403, 'Unauthorized');
 })->name('dashboard');
 
+
 /*
 |--------------------------------------------------------------------------
-| Auth Routes
+| Pembeli Route
 |--------------------------------------------------------------------------
 */
+
+use App\Http\Controllers\ProductController;
+
+Route::middleware('web')->group(function() {
+
+    // Halaman produk
+    Route::get('/produk', [ProductController::class, 'index'])->name('produk');
+
+    // Tambah ke cart
+    Route::post('/produk/add-to-cart', [ProductController::class, 'addToGuestCart'])
+        ->name('produk.add_to_guest_cart');
+
+    // Update qty cart
+    Route::post('/cart/update', [ProductController::class, 'updateGuestCart'])
+        ->name('cart.update');
+
+    // Hapus item cart
+    Route::post('/cart/delete', [ProductController::class, 'deleteGuestCart'])
+        ->name('cart.delete');
+
+    // Halaman checkout (VIEW)
+    Route::get('/checkout', [ProductController::class, 'checkoutPage'])
+        ->name('checkout.page');
+
+    // Checkout save ke database (order pending)
+    Route::post('/produk/checkout-guest', [ProductController::class, 'checkoutGuestCart'])
+        ->name('produk.checkout_guest_cart');
+
+    // Endpoint khusus generate pesan WA (optional)
+    Route::post('/checkout/send-whatsapp', [ProductController::class, 'sendWhatsApp'])
+        ->name('send.whatsapp');
+});
+
+Route::get('/refund', [RefundRequestController::class, 'form'])
+    ->name('refund.form');
+
+Route::post('/refund', [RefundRequestController::class, 'submit'])
+    ->name('refund.submit');
+
 require __DIR__ . '/auth.php';

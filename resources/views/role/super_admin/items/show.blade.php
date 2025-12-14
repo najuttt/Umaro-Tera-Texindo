@@ -31,7 +31,7 @@
          style="background:linear-gradient(90deg,#FF9800,#FFB300);">
       <div>
         <h4 class="fw-bold mb-0"><i class="ri-cube-line me-2"></i>{{ $item->name }}</h4>
-        <small class="fw-medium">Dashboard barang dan status kedaluwarsa</small>
+        <small class="fw-medium">Dashboard barang</small>
       </div>
       <span class="badge bg-white text-warning px-3 py-2 rounded-pill shadow-sm">
         <i class="ri-price-tag-3-line me-1"></i> {{ $item->category->name ?? 'Tanpa Kategori' }}
@@ -80,25 +80,6 @@
             <h4 class="fw-bold text-dark">{{ $item->stock }}</h4>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm h-100 rounded-4 text-center p-3" style="background:#E8F5E9;">
-            <div class="icon mb-3">
-              <i class="ri-checkbox-circle-line fs-2 text-success"></i>
-            </div>
-            <h6 class="fw-semibold text-dark">Belum Expired</h6>
-            <h4 class="fw-bold text-success">{{ $nonExpiredCount }}</h4>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm h-100 rounded-4 text-center p-3" style="background:#FFEBEE;">
-            <div class="icon mb-3">
-              <i class="ri-error-warning-line fs-2 text-danger"></i>
-            </div>
-            <h6 class="fw-semibold text-dark">Sudah Expired</h6>
-            <h4 class="fw-bold text-danger">{{ $expiredCount }}</h4>
-          </div>
-        </div>
-      </div>
 
       {{-- 📊 TABEL DATA --}}
       <div class="table-responsive mt-4">
@@ -109,16 +90,6 @@
               <th>Jumlah Barang</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td class="fw-semibold text-success"><i class="bi bi-check-circle-fill me-2"></i>Belum Expired</td>
-              <td class="fw-bold">{{ $nonExpiredCount }}</td>
-            </tr>
-            <tr>
-              <td class="fw-semibold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Sudah Expired</td>
-              <td class="fw-bold">{{ $expiredCount }}</td>
-            </tr>
-          </tbody>
         </table>
       </div>
 
@@ -126,14 +97,11 @@
       <div class="mt-5">
         <h5 class="fw-bold mb-3 text-dark"><i class="ri-information-line text-warning me-2"></i>Informasi Barang</h5>
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-md-12">
             <p><strong>Kategori:</strong> {{ $item->category->name ?? '-' }}</p>
             <p><strong>Satuan:</strong> {{ $item->unit->name ?? '-' }}</p>
             <p><strong>Harga:</strong> Rp {{ number_format($item->price, 0, ',', '.') }}</p>
-          </div>
-          <div class="col-md-6">
             <p><strong>Dibuat:</strong> {{ $item->created_at? $item->created_at->format('d M Y'):'-' }}</p>
-            <p><strong>Barcode:</strong> {{ $item->code ?? '-' }}</p>
           </div>
         </div>
       </div>

@@ -4,32 +4,16 @@
 
 <!-- 🌇 HERO SECTION -->
 <section id="awal" class="hero-section d-flex align-items-center min-vh-100 position-relative"
-  style="background: url('{{ asset('assets/img/backgrounds/Login.png') }}') center/cover no-repeat;">
+  style="background: url('{{ asset('assets/img/backgrounds/logo2.jpeg') }}') center/cover no-repeat;">
   <div class="hero-overlay-gradient"></div>
-
-  <div class="container position-relative z-3">
-    <div class="row align-items-center justify-content-start gy-5">
-      <div class="col-lg-8" data-aos="fade-up" data-aos-delay="200">
-        <div class="bg-white bg-opacity-75 rounded-4 p-4 shadow">
-          <h1 class="fw-bold text-dark mb-3">Sistem Informasi Manajemen Barang</h1>
-          <p class="text-dark mb-4">
-            Sistem digital untuk mengelola data barang UPTD Pelatihan Kesehatan agar lebih efisien, transparan, dan terintegrasi.
-          </p>
-          <a href="#tutorial" class="btn bg-dark bg-opacity-75 text-white fw-semibold px-4 py-2 rounded-3 border-0">
-            <i class="bi bi-info-circle me-2"></i> Lihat Panduan Penggunaan
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
 
 <!-- 🧠 ABOUT SECTION -->
-<section id="about" class="py-5 bg-white text-black">
+<section id="about" class="py-5" style="background:#F2EDE4; color:#0B2447;">
   <div class="container" data-aos="fade-up">
     <div class="section-title text-center mb-5">
-      <h2 class="fw-bold">Tentang Sistem</h2>
-      <p>Digitalisasi pengelolaan barang untuk efisiensi, akurasi, serta transparansi dalam kinerja UPTD Pelatihan Kesehatan.</p>
+      <h2 class="fw-bold" style="color:#0B2447;">Tentang Sistem</h2>
+      <p style="color:#0B2447;">Digitalisasi pengelolaan e-commerce yang lebih mudah serta transparansi dalam kinerja Umaro Tera Texindo.</p>
     </div>
 
     <div class="row align-items-center justify-content-center gy-5">
@@ -38,9 +22,9 @@
         <div id="aboutCarousel"
              class="carousel slide carousel-fade shadow-sm rounded-4 overflow-hidden w-100"
              data-bs-ride="carousel" data-bs-interval="4000"
-             style="max-width: 420px;">
+             style="max-width: 420px; background:#0B2447;">
           <div class="carousel-inner">
-            @for ($i = 1; $i <= 6; $i++)
+            @for ($i = 1; $i <= 4; $i++)
               <div class="carousel-item {{ $i === 1 ? 'active' : '' }}">
                 <img src="{{ asset('assets/img/about/about'.$i.'.png') }}"
                      class="d-block w-100 about-img"
@@ -49,12 +33,21 @@
             @endfor
           </div>
 
+          <!-- 🔹 Tombol Lihat Produk -->
+          <div class="text-center my-5" data-aos="fade-up" data-aos-delay="200">
+              <a href="{{ route('produk') }}" 
+                class="btn btn-lg px-5 py-3 fw-semibold rounded-3 shadow-sm"
+                style="background:#D4A017; color:white; border:none;">
+                  <i class="bi bi-box-seam me-2"></i> Lihat Produk
+              </a>
+          </div>
+
           <button class="carousel-control-prev" type="button" data-bs-target="#aboutCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon bg-dark rounded-circle p-2"></span>
+            <span class="carousel-control-prev-icon rounded-circle p-2" style="background:#0B2447;"></span>
             <span class="visually-hidden">Sebelumnya</span>
           </button>
           <button class="carousel-control-next" type="button" data-bs-target="#aboutCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon bg-dark rounded-circle p-2"></span>
+            <span class="carousel-control-next-icon rounded-circle p-2" style="background:#0B2447;"></span>
             <span class="visually-hidden">Berikutnya</span>
           </button>
         </div>
@@ -63,16 +56,15 @@
       <!-- 🧾 Teks Deskripsi -->
       <div class="col-lg-6" data-aos="fade-left">
         <div class="about-text">
-          <h4 class="fw-bold text-dark mb-3">Digitalisasi Pengelolaan barang</h4>
-          <p>
-            Sistem ini membantu proses pendataan, pelaporan, dan pemantauan arus penggunaan barang milik UPTD Pelatihan Kesehatan secara digital,
+          <h4 class="fw-bold mb-3" style="color:#0B2447;">Digitalisasi Pengelolaan Produk</h4>
+          <p style="color:#0B2447;">
+            Sistem ini membantu proses pembelian milik Umaro Tera Texindo secara digital,
             sehingga pengelolaan menjadi lebih efisien, akurat, dan transparan.
           </p>
           <ul class="list-unstyled mt-3">
-            <li><i class="bi bi-check-circle-fill text-warning me-2"></i> Pendataan barang otomatis dan terintegrasi.</li>
-            <li><i class="bi bi-check-circle-fill text-warning me-2"></i> Mengurangi risiko kehilangan atau duplikasi data.</li>
-            <li><i class="bi bi-check-circle-fill text-warning me-2"></i> Laporan real-time untuk audit dan evaluasi.</li>
-            <li><i class="bi bi-check-circle-fill text-warning me-2"></i> Efisiensi administrasi barang berbasis web.</li>
+            <li><i class="bi bi-check-circle-fill me-2" style="color:#D4A017;"></i> Pendataan produk otomatis dan terintegrasi.</li>
+            <li><i class="bi bi-check-circle-fill me-2" style="color:#D4A017;"></i> Mengurangi risiko kehilangan atau duplikasi data.</li>
+            <li><i class="bi bi-check-circle-fill me-2" style="color:#D4A017;"></i> Efisiensi e-commerce berbasis web.</li>
           </ul>
         </div>
       </div>
@@ -81,65 +73,35 @@
 </section>
 
 <!-- 📊 STATISTIK -->
-<section id="stats" class="bg-light py-5 text-black">
+<section id="stats" class="py-5" style="background:#A9B4C2; color:#0B2447;">
   <div class="container text-center" data-aos="fade-up">
-    <h2 class="fw-bold mb-5">Statistik Sistem</h2>
+    <h2 class="fw-bold mb-5" style="color:#0B2447;">Statistik Sistem</h2>
     <div class="row g-4 justify-content-center">
       <div class="col-6 col-md-4">
-        <div class="stats-item py-5 px-4 rounded-4 bg-white shadow-sm">
-          <i class="bi bi-bar-chart-line fs-1 text-warning mb-3"></i>
-          <h3 class="fw-bold mb-1">{{ $totalPengunjung ?? 0 }}</h3>
-          <p class="fw-semibold mb-0">Pengunjung Website</p>
+        <div class="stats-item py-5 px-4 rounded-4 shadow-sm" style="background:white;">
+          <i class="bi bi-bar-chart-line fs-1 mb-3" style="color:#D4A017;"></i>
+          <h3 class="fw-bold mb-1" style="color:#0B2447;">{{ $totalPengunjung ?? 0 }}</h3>
+          <p class="fw-semibold mb-0" style="color:#0B2447;">Pengunjung Website</p>
         </div>
       </div>
+
       <div class="col-6 col-md-4">
-        <div class="stats-item py-5 px-4 rounded-4 bg-white shadow-sm">
-          <i class="bi bi-person-check fs-1 text-warning mb-3"></i>
-          <h3 class="fw-bold mb-1">{{ $pegawaiAktif ?? 0 }}</h3>
-          <p class="fw-semibold mb-0">Pegawai Aktif</p>
+        <div class="stats-item py-5 px-4 rounded-4 shadow-sm" style="background:white;">
+          <i class="bi bi-person-check fs-1 mb-3" style="color:#D4A017;"></i>
+          <h3 class="fw-bold mb-1" style="color:#0B2447;">{{ $pegawaiAktif ?? 0 }}</h3>
+          <p class="fw-semibold mb-0" style="color:#0B2447;">Pegawai Aktif</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
- <!-- 🎥 TUTORIAL -->
-<section id="tutorial" class="bg-white py-5 text-black">
-    <div class="container" data-aos="fade-up">
-
-        <div class="section-title text-center mb-5">
-            <h2 class="fw-bold">Tata Cara Penggunaan Bagi Pegawai</h2>
-            <p>Panduan penggunaan sistem SIMBA melalui video interaktif.</p>
-        </div>
-
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="ratio ratio-16x9 shadow-lg rounded-4 overflow-hidden">
-                    <iframe 
-                        src="https://www.youtube.com/embed/fSorx0s5jG0" 
-                        title="Tutorial SIMBA"
-                        allowfullscreen
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        class="border-0">
-                    </iframe>
-                </div>
-            </div>
-        </div>
-
-        <div class="text-center mt-4">
-            <p class="text-muted">Jika video tidak muncul, pastikan koneksi internet stabil atau hubungi administrator.</p>
-        </div>
-
-    </div>
-</section>
-
-
 <!-- 📍 LOKASI -->
-<section id="lokasi" class="py-5 bg-white text-black">
+<section id="lokasi" class="py-5" style="background:#F2EDE4; color:#0B2447;">
   <div class="container" data-aos="fade-up">
     <div class="section-title text-center mb-4">
-      <h2 class="fw-bold">Lokasi Kami</h2>
-      <p>Temukan lokasi UPTD Pelatihan Kesehatan di Bandung melalui peta berikut.</p>
+      <h2 class="fw-bold" style="color:#0B2447;">Lokasi Kami</h2>
+      <p style="color:#0B2447;">Temukan lokasi Umaro Tera Texindo melalui peta berikut.</p>
     </div>
 
     <div class="map-container shadow rounded-4 overflow-hidden mx-auto" style="max-width: 900px;">
@@ -151,12 +113,10 @@
     </div>
 
     <div class="text-center mt-3">
-      <a href="https://maps.app.goo.gl/hULoeSpmtF2GydgU9" target="_blank" class="btn btn-warning px-4">
+      <a href="https://www.google.com/maps/place/Marketing+office+Parahyangan+Gallery/@-6.948615,107.5245215,17z/data=!3m1!4b1!4m6!3m5!1s0x2e68ef1970f910ad:0xd4a461195253f1d1!8m2!3d-6.948615!4d107.5270964!16s%2Fg%2F11jgcc81gx?entry=ttu&g_ep=EgoyMDI1MTIwOC4wIKXMDSoKLDEwMDc5MjA3M0gBUAM%3D" target="_blank" class="btn px-4"
+         style="background:#D4A017; color:white; border:none;">
         <i class="bi bi-geo-alt me-2"></i> Buka di Google Maps
       </a>
-      <p class="mt-2 text-muted small">
-        Jl. Pasteur No.31, Pasir Kaliki, Kec. Cicendo, Kota Bandung, Jawa Barat 40171
-      </p>
     </div>
   </div>
 </section>
@@ -169,15 +129,15 @@
 </script>
 
 <style>
-/* 🌇 Overlay gradient */
+/* 🌇 Overlay gradient sesuai brand */
 .hero-overlay-gradient {
   position: absolute; inset: 0;
-  background: linear-gradient(120deg, rgba(255,122,0,0.85), rgba(255,190,30,0.65), rgba(255,240,120,0.4));
+  background: linear-gradient(120deg, rgba(11,36,71,0.75), rgba(212,160,23,0.55), rgba(242,237,228,0.4));
   z-index: 1;
   mix-blend-mode: multiply;
 }
 
-/* 🧠 Gambar Carousel (About) */
+/* 🧠 Gambar Carousel */
 .about-img {
   max-height: 280px;
   object-fit: contain;
@@ -186,7 +146,7 @@
   margin: 0 auto;
 }
 
-/* 📘 Gambar Tutorial */
+/* 📘 Kartu Tutorial */
 .tutorial-card {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }

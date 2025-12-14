@@ -2,11 +2,11 @@
     <!-- 🔶 Logo & Brand -->
     <div class="app-brand demo py-3 d-flex align-items-center">
         <a href="index.html" class="app-brand-link d-flex align-items-center">
-            <img src="{{ asset('assets/img/icons/simba.jpg') }}" alt="Logo" class="rounded-circle shadow-glow" width="50" height="50">
-            <h4 class="app-brand-text fw-bold ms-3 mt-4 text-white text-glow">SIMBA</h4>
+            <img src="{{ asset('assets/img/icons/logo4.png') }}" alt="Logo" class="rounded-circle shadow-glow" width="50" height="50">
+            <h4 class="app-brand-text fw-bold ms-3 mt-4 text-white text-glow">UMARO</h4>
         </a>
     </div>
-    <small class="d-block text-center text-light mb-3">Sistem Informasi Manajemen Barang</small>
+    <small class="d-block text-center text-light mb-3">Sistem Informasi Manajemen Barang Textile Umaro</small>
 
     <div class="menu-inner-shadow"></div>
 
@@ -43,28 +43,10 @@
 
         <!-- PEGAWAI -->
         @if (auth()->user()->role === 'pegawai')
-        <li class="menu-item {{ Route::is('pegawai.dashboard') ? 'active' : '' }}">
-            <a href="{{ route('pegawai.dashboard') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-dashboard-line me-2"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
         <li class="menu-item {{ Route::is('pegawai.produk') ? 'active' : '' }}">
             <a href="{{ route('pegawai.produk') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-shopping-cart-line me-2"></i>
-                <span>Produk</span>
-            </a>
-        </li>
-        <li class="menu-item {{ Route::is('pegawai.permintaan.pending') ? 'active' : '' }}">
-            <a href="{{ route('pegawai.permintaan.pending') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-time-line me-2"></i>
-                <span>Permintaan Pending</span>
-            </a>
-        </li>
-        <li class="menu-item {{ Route::is('pegawai.permintaan.history') ? 'active' : '' }}">
-            <a href="{{ route('pegawai.permintaan.history') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-history-line me-2"></i>
-                <span>Riwayat Permintaan</span>
+                <i class="ri ri-dashboard-line me-2"></i>
+                <span>Dashboard</span>
             </a>
         </li>
         @endif
@@ -102,6 +84,19 @@
                 <span>Barang Masuk</span>
             </a>
         </li>
+        <li class="menu-item {{ Route::is('super_admin.orders.*') ? 'active' : '' }}">
+            <a href="{{ route('super_admin.orders.index') }}" class="menu-link d-flex align-items-center text-white">
+                <i class="ri ri-shopping-cart-2-line me-2"></i>
+                <span>Orders</span>
+            </a>
+        </li>
+        <li class="menu-item {{ Route::is('super_admin.refunds') ? 'active' : '' }}">
+            <a href="{{ route('super_admin.refunds') }}"
+            class="menu-link d-flex align-items-center text-white position-relative">
+                <i class="ri ri-refund-2-line me-2"></i>
+                <span>Refund</span>
+            </a>
+        </li>
         <li class="menu-item {{ Route::is('super_admin.users.*') ? 'active' : '' }}">
             <a href="{{ route('super_admin.users.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
                 <i class="ri ri-group-line me-2"></i>
@@ -114,10 +109,10 @@
                 <span>Ekspor Data</span>
             </a>
         </li>
-        <li class="menu-item {{ Route::is('super_admin.manual_book.index') ? 'active' : '' }}">
-            <a href="{{ route('super_admin.manual_book.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-book-open-line me-2"></i>
-                <span>Buku Panduan</span>
+        <li class="menu-item {{ Route::is('super_admin.pembukuan.*') ? 'active' : '' }}">
+            <a href="{{ route('super_admin.pembukuan.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
+                <i class="ri ri-bar-chart-2-line me-2"></i>
+                <span>Pembukuan</span>
             </a>
         </li>
         @endif
@@ -126,76 +121,18 @@
         @if (auth()->user()->role === 'admin')
         <li class="menu-header mt-4 text-uppercase small fw-bold text-secondary">Admin</li>
 
-        <li class="menu-item {{ Route::is('admin.request') ? 'active' : '' }}">
-            <a href="{{ route('admin.request') }}" class="menu-link d-flex align-items-center justify-content-between text-white position-relative">
-                <div class="d-flex align-items-center">
-                    <i class="ri ri-file-list-3-line me-2"></i>
-                    <span>Permintaan</span>
-                </div>
-                @if($pendingCount > 0)
-                    <span class="badge rounded-pill bg-danger ms-2" id="badgePending">{{ $pendingCount }}</span>
-                @endif
+        <li class="menu-item {{ Route::is('admin.orders.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.orders.index') }}" 
+            class="menu-link d-flex align-items-center text-white position-relative">
+                <i class="ri ri-shopping-bag-3-line me-2"></i>
+                <span>Orders Pending</span>
             </a>
         </li>
-
-        <li class="menu-item {{ Route::is('admin.itemout.*') ? 'active' : '' }}">
-            <a href="{{ route('admin.itemout.index') }}" class="menu-link d-flex align-items-center justify-content-between text-white position-relative">
-                <div class="d-flex align-items-center">
-                    <i class="ri ri-qr-scan-2-line me-2"></i>
-                    <span>ScanQr</span>
-                </div>
-                @if($approvedCount > 0)
-                    <span class="badge rounded-pill bg-success ms-2" id="badgeApproved">{{ $approvedCount }}</span>
-                @endif
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('admin.guests.index') ? 'active' : '' }}">
-            <a href="{{ route('admin.guests.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-user-line me-2"></i>
-                <span>List Guest</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('admin.pegawai.index') ? 'active' : '' }}">
-            <a href="{{ route('admin.pegawai.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-user-line me-2"></i>
-                <span>List Pegawai</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('admin.export.out') ? 'active' : '' }}">
-            <a href="{{ route('admin.export.out') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-download-2-line me-2"></i>
-                <span>Export Barang Keluar</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('admin.transaksi.out') ? 'active' : '' }}">
-            <a href="{{ route('admin.transaksi.out') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="bi-pencil-square me-2"></i>
-                <span>Data Transaksi</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('admin.rejects.scan') ? 'active' : '' }}">
-            <a href="{{ route('admin.rejects.scan') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-close-circle-line me-2"></i>
-                <span>Barang Rusak / Reject</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('admin.rejects.index') ? 'active' : '' }}">
-            <a href="{{ route('admin.rejects.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-close-circle-line me-2"></i>
-                <span>Data Barang Rusak / Reject</span>
-            </a>
-        </li>
-
-        <li class="menu-item {{ Route::is('manual_book.index') ? 'active' : '' }}">
-            <a href="{{ route('admin.manual_book.index') }}" class="menu-link d-flex align-items-center text-white position-relative">
-                <i class="ri ri-book-open-line me-2"></i>
-                <span>Panduan Pemakaian</span>
+        <li class="menu-item {{ Route::is('admin.refunds') ? 'active' : '' }}">
+            <a href="{{ route('admin.refunds') }}"
+            class="menu-link d-flex align-items-center text-white position-relative">
+                <i class="ri ri-refund-line me-2"></i>
+                <span>Refund</span>
             </a>
         </li>
         @endif
