@@ -13,7 +13,6 @@ use App\Models\Category;
 
 class ProductController extends Controller
 {
-    // ==========================
     // PRODUK PAGE
     // ==========================
     public function index(Request $request)
@@ -27,15 +26,16 @@ class ProductController extends Controller
             $query->where(function($q) use ($search){
                 $q->where('name', 'like', "%$search%")
                   ->orWhere('code', 'like', "%$search%")
-                  ->orWhereHas('category', fn($c) => 
+                  ->orWhereHas('category', fn($c) =>
                         $c->where('name', 'like', "%$search%")
                   );
             });
         }
+        $items = $query->paginate(8);
 
         // KATEGORI FILTER
         if ($request->kategori && $request->kategori != 'none') {
-            $query->whereHas('category', fn($q) => 
+            $query->whereHas('category', fn($q) =>
                 $q->where('name', $request->kategori)
             );
         }
@@ -69,29 +69,44 @@ class ProductController extends Controller
     }
 
     // ==========================
-    // ADD TO CART
+    // ADD TO CART (AMAN STOK)
     // ==========================
     public function addToGuestCart(Request $request)
     {
         $request->validate([
-            'item_id' => 'required|exists:items,id',
-            'quantity' => 'nullable|integer|min:1'
+            'item_id'  => 'required|exists:items,id',
+            'quantity' => 'nullable|integer|min:1|max:100'
         ]);
 
         $qty = intval($request->quantity ?? 1);
+
+        $item = Item::findOrFail($request->item_id);
 
         $sessionId = $request->session()->get('guest_session', Str::uuid());
         $request->session()->put('guest_session', $sessionId);
 
         $cart = Guest_carts::firstOrCreate(['session_id' => $sessionId]);
 
-        $ci = $cart->guestCartItems()->where('item_id', $request->item_id)->first();
+        $cartItem = $cart->guestCartItems()
+            ->where('item_id', $item->id)
+            ->first();
 
-        if ($ci) {
-            $ci->increment('quantity', $qty);
+        $currentQty = $cartItem ? $cartItem->quantity : 0;
+        $newQty     = $currentQty + $qty;
+
+        // 🔐 VALIDASI STOK
+        if ($newQty > $item->stock) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stok tidak mencukupi'
+            ], 422);
+        }
+
+        if ($cartItem) {
+            $cartItem->update(['quantity' => $newQty]);
         } else {
             $cart->guestCartItems()->create([
-                'item_id' => $request->item_id,
+                'item_id'  => $item->id,
                 'quantity' => $qty
             ]);
         }
@@ -99,41 +114,75 @@ class ProductController extends Controller
         $cartItems = $cart->guestCartItems()->with('item')->get();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Item ditambahkan',
-            'cart_count' => $cartItems->sum('quantity'),
-            'cart_items' => $cartItems->map(fn($i) => [
-                'id'       => $i->item_id,
-                'name'     => $i->item->name,
-                'quantity' => $i->quantity
-            ])
+            'success'    => true,
+            'cart_count'=> $cartItems->sum('quantity'),
+            'cart_items'=> $cartItems
         ]);
     }
 
     // ==========================
-    // UPDATE CART
+    // UPDATE CART (AMAN STOK)
     // ==========================
     public function updateGuestCart(Request $request)
     {
         $request->validate([
             'item_id'  => 'required|exists:items,id',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1|max:100'
         ]);
 
-        $sessionId = $request->session()->get('guest_session');
+        $item = Item::findOrFail($request->item_id);
 
-        $cart = Guest_carts::where('session_id', $sessionId)->first();
-        if (!$cart) return response()->json(['error' => 'Cart tidak ditemukan'], 404);
+        if ($request->quantity > $item->stock) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jumlah melebihi stok'
+            ], 422);
+        }
 
-        $cartItem = $cart->guestCartItems()->where('item_id', $request->item_id)->first();
-        if (!$cartItem) return response()->json(['error' => 'Item tidak ditemukan'], 404);
+        $cart = Guest_carts::where(
+            'session_id',
+            $request->session()->get('guest_session')
+        )->firstOrFail();
 
-        $cartItem->update(['quantity' => $request->quantity]);
+        $cart->guestCartItems()
+            ->where('item_id', $item->id)
+            ->update(['quantity' => $request->quantity]);
 
         return response()->json([
             'success' => true,
-            'cart_count' => $cart->guestCartItems->sum('quantity'),
             'cart_items' => $cart->guestCartItems()->with('item')->get()
+        ]);
+    }
+
+    public function getGuestCart(Request $request)
+    {
+        $sessionId = $request->session()->get('guest_session');
+
+        if (!$sessionId) {
+            return response()->json([
+                'cart_items' => []
+            ]);
+        }
+
+        $cart = Guest_carts::with('guestCartItems.item')
+            ->where('session_id', $sessionId)
+            ->first();
+
+        if (!$cart) {
+            return response()->json([
+                'cart_items' => []
+            ]);
+        }
+
+        return response()->json([
+            'cart_items' => $cart->guestCartItems->map(function ($ci) {
+                return [
+                    'item_id'  => $ci->item_id,
+                    'name'     => $ci->item->name,
+                    'price'    => $ci->item->price,
+                    'quantity' => $ci->quantity,
+                ];
+            })
         ]);
     }
 
@@ -146,16 +195,17 @@ class ProductController extends Controller
             'item_id' => 'required|exists:items,id'
         ]);
 
-        $sessionId = $request->session()->get('guest_session');
+        $cart = Guest_carts::where(
+            'session_id',
+            $request->session()->get('guest_session')
+        )->firstOrFail();
 
-        $cart = Guest_carts::where('session_id', $sessionId)->first();
-        if (!$cart) return response()->json(['error' => 'Cart tidak ditemukan'], 404);
-
-        $cart->guestCartItems()->where('item_id', $request->item_id)->delete();
+        $cart->guestCartItems()
+            ->where('item_id', $request->item_id)
+            ->delete();
 
         return response()->json([
             'success' => true,
-            'cart_count' => $cart->guestCartItems->sum('quantity'),
             'cart_items' => $cart->guestCartItems()->with('item')->get()
         ]);
     }

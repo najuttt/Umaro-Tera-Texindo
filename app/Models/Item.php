@@ -51,7 +51,7 @@ class Item extends Model
         return $this->hasMany(Item_out::class, 'item_id');
     }
 
-    public function orderitem()
+    public function orderItems()
     {
         return $this->hasMany(OrderItem::class, 'item_id');
     }

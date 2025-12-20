@@ -5,17 +5,13 @@
 <div class="container-fluid py-4 animate__animated animate__fadeIn">
 
   {{-- 🧭 BREADCRUMB --}}
-  <div class="bg-white shadow-sm rounded-4 px-4 py-3 mb-4 d-flex align-items-center gap-2 smooth-fade">
+  <div class="bg-white shadow-sm rounded-4 px-4 py-3 mb-4 d-flex align-items-center gap-2">
     <i class="ri-refund-2-line fs-5" style="color:#FF9800;"></i>
-    <a href="{{ route('dashboard') }}" class="fw-semibold text-decoration-none" style="color:#FF9800;">
-      Dashboard
-    </a>
-    <span class="text-muted">/</span>
     <span class="fw-semibold text-dark">Manajemen Refund</span>
   </div>
 
-  {{-- 📋 TABEL REFUND --}}
-  <div class="card border-0 shadow-sm rounded-4 smooth-fade">
+  {{-- 📋 TABLE --}}
+  <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-3">
       <div class="table-responsive">
 
@@ -23,91 +19,109 @@
           <thead class="text-center" style="background:#FFF3E0;">
             <tr>
               <th>Order Code</th>
-              <th>Alamat</th>
+              <th>Item Refund</th>
+              <th>Alasan</th>
               <th>Bukti</th>
               <th>Status</th>
               <th width="180">Aksi</th>
             </tr>
           </thead>
+
           <tbody>
+          @forelse($refunds as $refund)
 
-            @forelse($refunds as $refund)
-              @php
-                $statusMap = [
-                  'pending'  => 'bg-warning-subtle text-warning',
-                  'approved' => 'bg-success-subtle text-success',
-                  'rejected' => 'bg-danger-subtle text-danger',
-                ];
-                $statusClass = $statusMap[$refund->status] ?? 'bg-secondary-subtle text-secondary';
-              @endphp
+            @php
+              $statusMap = [
+                'pending'  => 'bg-warning-subtle text-warning',
+                'approved' => 'bg-success-subtle text-success',
+                'rejected' => 'bg-danger-subtle text-danger',
+              ];
+              $statusClass = $statusMap[$refund->status] ?? 'bg-secondary-subtle text-secondary';
+            @endphp
 
-              <tr class="text-center table-row-hover">
-                <td class="fw-semibold text-dark">
-                  {{ $refund->order->order_code }}
-                </td>
+            <tr>
+              {{-- ORDER CODE --}}
+              <td class="text-center fw-semibold">
+                {{ $refund->order?->order_code ?? '-' }}
+              </td>
 
-                <td class="text-start text-muted">
-                  {{ $refund->reason ?? '-' }}
-                </td>
+              {{-- ITEM REFUND --}}
+              <td>
+                @forelse($refund->items as $ri)
+                  <div class="small">
+                    {{ $ri->item?->name ?? 'Item dihapus' }}
+                    <span class="text-muted">(x{{ $ri->qty }})</span>
+                  </div>
+                @empty
+                  <span class="text-muted fst-italic small">Tidak ada item</span>
+                @endforelse
+              </td>
 
-                <td>
-                  @if($refund->proof_file)
-                    <a href="{{ asset('storage/'.$refund->proof_file) }}"
-                       target="_blank"
-                       class="btn btn-sm rounded-pill shadow-sm"
-                       style="border:1px solid #FFB74D;color:#FF9800;background:#FFF3E0;">
-                      <i class="ri-image-line me-1"></i> Lihat
-                    </a>
-                  @else
-                    <span class="text-muted small">-</span>
-                  @endif
-                </td>
+              {{-- ALASAN --}}
+              <td class="text-muted small">
+                {{ $refund->reason ?? '-' }}
+              </td>
 
-                <td>
-                  <span class="badge px-3 py-2 rounded-pill {{ $statusClass }}">
-                    {{ strtoupper($refund->status) }}
-                  </span>
-                </td>
+              {{-- BUKTI --}}
+              <td class="text-center">
+                @if($refund->proof_file)
+                  <a href="{{ asset('storage/'.$refund->proof_file) }}"
+                     target="_blank"
+                     class="btn btn-sm rounded-pill"
+                     style="border:1px solid #FF9800;color:#FF9800;">
+                    Lihat
+                  </a>
+                @else
+                  <span class="text-muted">-</span>
+                @endif
+              </td>
 
-                <td>
-                  @if($refund->status === 'pending')
-                    <div class="d-flex justify-content-center gap-2">
+              {{-- STATUS --}}
+              <td class="text-center">
+                <span class="badge px-3 py-2 rounded-pill {{ $statusClass }}">
+                  {{ strtoupper($refund->status) }}
+                </span>
+              </td>
 
-                      <form action="{{ route('admin.refunds.approve', $refund->id) }}"
-                            method="POST">
-                        @csrf
-                        <button class="btn btn-sm rounded-pill shadow-sm"
-                                style="background:#4CAF50;color:#fff;">
-                          <i class="ri-check-line me-1"></i> Approve
-                        </button>
-                      </form>
+              {{-- AKSI --}}
+              <td class="text-center">
+                @if($refund->status === 'pending')
+                  <div class="d-flex justify-content-center gap-2">
 
-                      <form action="{{ route('admin.refunds.reject', $refund->id) }}"
-                            method="POST">
-                        @csrf
-                        <button class="btn btn-sm rounded-pill shadow-sm"
-                                style="background:#F44336;color:#fff;">
-                          <i class="ri-close-line me-1"></i> Reject
-                        </button>
-                      </form>
+                    <form method="POST"
+                          action="{{ route('admin.refunds.approve', $refund->id) }}">
+                      @csrf
+                      <button class="btn btn-sm rounded-pill"
+                              style="background:#4CAF50;color:#fff;">
+                        Approve
+                      </button>
+                    </form>
 
-                    </div>
-                  @else
-                    <span class="text-muted small fst-italic">Selesai</span>
-                  @endif
-                </td>
-              </tr>
+                    <form method="POST"
+                          action="{{ route('admin.refunds.reject', $refund->id) }}">
+                      @csrf
+                      <button class="btn btn-sm rounded-pill"
+                              style="background:#F44336;color:#fff;">
+                        Reject
+                      </button>
+                    </form>
 
-            @empty
-              <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                  <i class="ri-information-line me-1"></i>
-                  Belum ada pengajuan refund
-                </td>
-              </tr>
-            @endforelse
+                  </div>
+                @else
+                  <span class="text-muted fst-italic small">Selesai</span>
+                @endif
+              </td>
+            </tr>
 
+          @empty
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                Belum ada pengajuan refund
+              </td>
+            </tr>
+          @endforelse
           </tbody>
+
         </table>
 
       </div>
@@ -115,5 +129,4 @@
   </div>
 
 </div>
-
 @endsection

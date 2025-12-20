@@ -14,18 +14,12 @@ class Order extends Model
         'customer_name',
         'customer_phone',
         'customer_address',
-        'created_by',
         'status'
     ];
 
     public function orderItems()
     {
-        return $this->hasMany(OrderItem::class, 'order_id');
-    }
-
-    public function getTotalQtyAttribute()
-    {
-        return $this->orderItems->sum('quantity');
+        return $this->hasMany(OrderItem::class);
     }
 
     public function refund()
@@ -33,11 +27,21 @@ class Order extends Model
         return $this->hasOne(RefundRequest::class);
     }
 
+    public function getTotalQtyAttribute()
+    {
+        return $this->orderItems->sum('quantity');
+    }
+
     public function getTotalSaleAttribute()
     {
         return $this->orderItems->sum(function ($item) {
             return ($item->item->price ?? 0) * $item->quantity;
         });
+    }
+
+    public function isRefunded()
+    {
+        return in_array($this->status, ['refunded', 'partial_refund']);
     }
 
     public static function generateOrderCode()
@@ -54,5 +58,4 @@ class Order extends Model
 
         return 'UMT-' . $date . '-' . str_pad($number, 4, '0', STR_PAD_LEFT);
     }
-
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\HppLog;
 use App\Models\ExpenseLog;
+use App\Models\RefundItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -33,7 +34,6 @@ class PembukuanController extends Controller
             'note'      => 'nullable|string'
         ]);
 
-        // Simpan data HPP dari form
         HppLog::create($request->only(['date','hpp_total','note']));
 
         return back()->with('success', 'HPP berhasil disimpan');
@@ -50,14 +50,13 @@ class PembukuanController extends Controller
             'amount'      => 'required|numeric'
         ]);
 
-        // Simpan data pengeluaran dari form
         ExpenseLog::create($request->only(['date','description','amount']));
 
         return back()->with('success', 'Pengeluaran berhasil disimpan');
     }
 
     // =============================
-    // EXPORT PDF PEMBUKUAN
+    // EXPORT PDF PEMBUKUAN (REFUND AMAN)
     // =============================
     public function export(Request $request)
     {
@@ -69,7 +68,7 @@ class PembukuanController extends Controller
         $start = Carbon::parse($request->start_date)->startOfDay();
         $end   = Carbon::parse($request->end_date)->endOfDay();
 
-        // Ambil order approved beserta item
+        // Ambil order approved
         $orders = Order::where('status', 'approved')
             ->whereBetween('created_at', [$start, $end])
             ->with('orderItems.item')
@@ -80,14 +79,32 @@ class PembukuanController extends Controller
 
         foreach ($orders as $order) {
             foreach ($order->orderItems as $oi) {
+
+                // =============================
+                // HITUNG QTY YANG SUDAH DIREFUND
+                // =============================
+                $refundedQty = RefundItem::whereHas('refundRequest', function ($q) use ($order) {
+                        $q->where('order_id', $order->id)
+                          ->where('status', 'approved');
+                    })
+                    ->where('item_id', $oi->item_id)
+                    ->sum('qty');
+
+                $finalQty = $oi->quantity - $refundedQty;
+
+                // Kalau qty habis direfund → skip
+                if ($finalQty <= 0) {
+                    continue;
+                }
+
                 $price = $oi->item?->price ?? 0;
                 $name  = $oi->item?->name ?? '-';
-                $total = $price * $oi->quantity;
+                $total = $price * $finalQty;
 
                 $salesData[] = [
                     'tanggal'    => $order->created_at->format('Y-m-d'),
                     'produk'     => $name,
-                    'qty'        => $oi->quantity,
+                    'qty'        => $finalQty,
                     'harga_jual' => $price,
                     'total_jual' => $total
                 ];
@@ -96,18 +113,24 @@ class PembukuanController extends Controller
             }
         }
 
-        // Ambil HPP dan pengeluaran sesuai periode
-        $totalHpp        = HppLog::whereBetween('date', [$start, $end])->sum('hpp_total');
-        $expensesData    = ExpenseLog::whereBetween('date', [$start, $end])->get();
+        // =============================
+        // DATA HPP & PENGELUARAN
+        // =============================
+        $totalHpp         = HppLog::whereBetween('date', [$start, $end])->sum('hpp_total');
+        $expensesData     = ExpenseLog::whereBetween('date', [$start, $end])->get();
         $totalPengeluaran = $expensesData->sum('amount');
 
-        // Hitung laba
+        // =============================
+        // HITUNG LABA
+        // =============================
         $totalLabaKotor = $totalPenjualan - $totalHpp;
         $labaBersih     = $totalLabaKotor - $totalPengeluaran;
 
         $periodeText = $start->format('d M Y').' - '.$end->format('d M Y');
 
-        // Generate PDF
+        // =============================
+        // GENERATE PDF
+        // =============================
         $pdf = Pdf::loadView('role.super_admin.exports.pembukuan_pdf', [
             'salesData'        => $salesData,
             'expensesData'     => $expensesData,

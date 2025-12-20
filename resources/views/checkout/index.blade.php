@@ -1,4 +1,4 @@
-@extends('layouts.wellcome')
+@extends('layouts.checkout')
 
 @section('content')
 <div class="container py-4">

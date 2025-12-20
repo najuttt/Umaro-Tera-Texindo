@@ -5,71 +5,93 @@
 <div class="container-fluid py-4 animate__animated animate__fadeIn">
 
   {{-- 🧭 BREADCRUMB --}}
-  <div class="bg-white shadow-sm rounded-4 px-4 py-3 mb-4 d-flex align-items-center gap-2 smooth-fade">
-    <i class="ri-refund-2-line fs-5" style="color:#FF9800;"></i>
-    <a href="{{ route('dashboard') }}" class="fw-semibold text-decoration-none" style="color:#FF9800;">
-      Dashboard
-    </a>
-    <span class="text-muted">/</span>
+  <div class="bg-white shadow-sm rounded-4 px-4 py-3 mb-4 d-flex align-items-center gap-2">
+    <i class="ri-refund-2-line fs-5 text-warning"></i>
     <span class="fw-semibold text-dark">Data Refund</span>
   </div>
 
-  {{-- 📋 CARD TABLE --}}
-  <div class="card border-0 shadow-sm rounded-4 smooth-fade">
+  {{-- 📋 TABLE --}}
+  <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-3">
       <div class="table-responsive">
 
         <table class="table table-hover align-middle mb-0">
-          <thead class="text-center" style="background:#FFF3E0;">
+          <thead class="text-center bg-warning-subtle">
             <tr>
-              <th>Order Code</th>
-              <th>Alamat</th>
-              <th>Status</th>
-              <th>Diajukan</th>
+              <th style="width:160px">Order Code</th>
+              <th>Item Refund</th>
+              <th style="width:120px">Status</th>
+              <th style="width:140px">Diajukan</th>
             </tr>
           </thead>
+
           <tbody>
-            @forelse($refunds as $refund)
+          @forelse($refunds as $refund)
 
-              @php
-                $statusMap = [
-                  'pending'  => 'bg-warning-subtle text-warning',
-                  'approved' => 'bg-success-subtle text-success',
-                  'rejected' => 'bg-danger-subtle text-danger',
-                ];
+            @php
+              $statusMap = [
+                'pending'  => 'bg-warning-subtle text-warning',
+                'approved' => 'bg-success-subtle text-success',
+                'rejected' => 'bg-danger-subtle text-danger',
+              ];
+              $statusClass = $statusMap[$refund->status] ?? 'bg-secondary-subtle text-secondary';
 
-                $statusClass = $statusMap[$refund->status] ?? 'bg-secondary-subtle text-secondary';
-              @endphp
+              $totalQty = $refund->items->sum('quantity');
+            @endphp
 
-              <tr class="text-center table-row-hover">
-                <td class="fw-semibold text-dark">
-                  {{ $refund->order->order_code }}
-                </td>
+            <tr>
+              {{-- ORDER CODE --}}
+              <td class="text-center fw-semibold">
+                {{ $refund->order?->order_code ?? '-' }}
+              </td>
 
-                <td class="text-start text-muted">
-                  {{ $refund->reason }}
-                </td>
+              {{-- ITEM REFUND --}}
+              <td>
+                <div class="border rounded-3 p-2 bg-light"
+                     style="max-height:120px; overflow-y:auto">
 
-                <td>
-                  <span class="badge px-3 py-2 rounded-pill {{ $statusClass }}">
-                    {{ strtoupper($refund->status) }}
-                  </span>
-                </td>
+                  @forelse($refund->items as $ri)
+                    <div class="d-flex justify-content-between align-items-center
+                                small bg-white rounded-2 px-2 py-1 mb-1 shadow-sm">
 
-                <td>
-                  {{ $refund->created_at->format('d M Y') }}
-                </td>
-              </tr>
+                      <span>
+                        {{ $ri->item?->name ?? 'Item dihapus' }}
+                      </span>
 
-            @empty
-              <tr>
-                <td colspan="4" class="text-center py-4 text-muted">
-                  <i class="ri-information-line me-1"></i>
-                  Belum ada data refund.
-                </td>
-              </tr>
-            @endforelse
+                      <span class="badge bg-dark-subtle text-dark">
+                        {{ $ri->qty }}
+                      </span>
+                    </div>
+                  @empty
+                    <span class="text-muted fst-italic small">
+                      Tidak ada item refund
+                    </span>
+                  @endforelse
+
+                </div>
+
+              {{-- STATUS --}}
+              <td class="text-center">
+                <span class="badge px-3 py-2 rounded-pill {{ $statusClass }}">
+                  {{ strtoupper($refund->status) }}
+                </span>
+              </td>
+
+              {{-- TANGGAL --}}
+              <td class="text-center">
+                {{ $refund->created_at->format('d M Y') }}
+              </td>
+            </tr>
+
+          @empty
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">
+                Belum ada data refund
+              </td>
+            </tr>
+          @endforelse
           </tbody>
+
         </table>
 
       </div>
@@ -77,5 +99,4 @@
   </div>
 
 </div>
-
 @endsection

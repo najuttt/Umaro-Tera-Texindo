@@ -21,7 +21,7 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="text-center" style="background:#FFF3E0;">
             <tr>
-              <th>#</th>
+              <th>No</th>
               <th>Nama</th>
               <th>HP</th>
               <th>Status</th>

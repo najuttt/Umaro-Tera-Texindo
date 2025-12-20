@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -8,10 +9,19 @@ return new class extends Migration {
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->string('order_code')->unique();
             $table->string('customer_name');
             $table->string('customer_phone');
             $table->text('customer_address');
-            $table->enum('status', ['pending','approved','rejected'])->default('pending');
+
+            $table->enum('status', [
+                'pending',
+                'approved',
+                'rejected',
+                'partial_refund',
+                'refunded'
+            ])->default('pending');
+
             $table->timestamps();
         });
     }

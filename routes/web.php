@@ -10,8 +10,9 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PermintaanController;
-use App\Http\Controllers\CartController;
+use App\Http\Controllers\ManualOrderController;
 use App\Http\Controllers\PembukuanController;
+use App\Http\Controllers\CartController;
 use App\Models\Visitor;
 use App\Models\User;
 use App\Http\Controllers\ManualBookController;
@@ -359,6 +360,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/orders/{order}', [OrderAdminController::class, 'show'])
             ->name('orders.show');
 
+        Route::get('manual-order', [ManualOrderController::class, 'create'])->name('manual-order.create');
+        Route::post('manual-order', [ManualOrderController::class, 'store'])->name('manual-order.store');
+
         Route::post('/orders/{order}/approve', [OrderAdminController::class, 'approve'])->name('orders.approve');
         Route::post('/orders/{order}/reject', [OrderAdminController::class, 'reject'])->name('orders.reject');
 
@@ -457,6 +461,9 @@ Route::middleware('web')->group(function() {
     Route::get('/checkout', [ProductController::class, 'checkoutPage'])
         ->name('checkout.page');
 
+    Route::get('/cart/get',[ProductController::class,'getGuestCart'])
+    ->name('cart.get');
+
     // Checkout save ke database (order pending)
     Route::post('/produk/checkout-guest', [ProductController::class, 'checkoutGuestCart'])
         ->name('produk.checkout_guest_cart');
@@ -466,10 +473,13 @@ Route::middleware('web')->group(function() {
         ->name('send.whatsapp');
 });
 
-Route::get('/refund', [RefundRequestController::class, 'form'])
-    ->name('refund.form');
+    Route::get('/refund', [RefundRequestController::class, 'form'])
+        ->name('refund.form');
 
-Route::post('/refund', [RefundRequestController::class, 'submit'])
-    ->name('refund.submit');
+    Route::post('/refund/check-order', [RefundRequestController::class, 'checkOrder'])
+        ->name('refund.check');
+
+    Route::post('/refund/submit', [RefundRequestController::class, 'submit'])
+        ->name('refund.submit');
 
 require __DIR__ . '/auth.php';

@@ -135,6 +135,13 @@
                 <span>Refund</span>
             </a>
         </li>
+        <li class="menu-item {{ Route::is('admin.manual-order.create') ? 'active' : '' }}">
+            <a href="{{ route('admin.manual-order.create') }}"
+            class="menu-link d-flex align-items-center text-white position-relative">
+                <i class="ri ri-shopping-cart-line me-2"></i>
+                <span>Manual Order</span>
+            </a>
+        </li>
         @endif
     </ul>
 

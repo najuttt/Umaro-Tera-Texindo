@@ -12,6 +12,17 @@
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .mt-20 { margin-top: 20px; }
+        .note {
+            font-size: 10px;
+            margin-top: 6px;
+            color: #333;
+            text-align: center;
+        }
+        .summary {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -19,8 +30,22 @@
 <h2>LAPORAN PEMBUKUAN</h2>
 <p style="text-align:center;">Periode: {{ $periodeText }}</p>
 
+<p class="note">
+    * Seluruh data penjualan telah disesuaikan dengan transaksi refund yang disetujui.
+</p>
+
 {{-- ======================================================= --}}
-{{-- 1. DATA PRODUK (DARI ORDER + ITEM) --}}
+{{-- RINGKASAN EKSEKUTIF --}}
+{{-- ======================================================= --}}
+<div class="summary">
+    <strong>Ringkasan:</strong><br>
+    Total Penjualan Bersih : Rp {{ number_format($totalPenjualan,0,',','.') }} <br>
+    Total Pengeluaran      : Rp {{ number_format($totalPengeluaran,0,',','.') }} <br>
+    <strong>Laba Bersih    : Rp {{ number_format($labaBersih,0,',','.') }}</strong>
+</div>
+
+{{-- ======================================================= --}}
+{{-- 1. DATA PRODUK --}}
 {{-- ======================================================= --}}
 <h3 class="mt-20">1. Data Produk</h3>
 
@@ -52,7 +77,7 @@
 {{-- ======================================================= --}}
 {{-- 2. CATATAN PENJUALAN --}}
 {{-- ======================================================= --}}
-<h3 class="mt-20">2. Catatan Penjualan Harian</h3>
+<h3 class="mt-20">2. Catatan Penjualan Harian (Netto)</h3>
 
 <table>
     <thead>
@@ -60,7 +85,7 @@
             <th>No</th>
             <th>Tanggal</th>
             <th>Produk</th>
-            <th>Qty</th>
+            <th>Qty (Setelah Refund)</th>
             <th>Harga Jual</th>
             <th>Total Jual</th>
         </tr>
@@ -83,14 +108,14 @@
     </tbody>
 </table>
 
-<p><strong>Total Penjualan:</strong> Rp {{ number_format($totalPenjualan,0,',','.') }}</p>
+<p><strong>Total Penjualan Bersih:</strong> Rp {{ number_format($totalPenjualan,0,',','.') }}</p>
 <p><strong>Total HPP:</strong> Rp {{ number_format($totalHpp,0,',','.') }}</p>
 <p><strong>Total Laba Kotor:</strong> Rp {{ number_format($totalLabaKotor,0,',','.') }}</p>
 
 {{-- ======================================================= --}}
-{{-- 3. PENGELUARAN OPERASIONAL --}}
+{{-- 3. PENGELUARAN --}}
 {{-- ======================================================= --}}
-<h3 class="mt-20">3. Pengeluaran Operasional</h3>
+<h3 class="mt-20">3. Pengeluaran Operasional & Refund</h3>
 
 <table>
     <thead>
@@ -106,7 +131,12 @@
         <tr>
             <td class="text-center">{{ $i+1 }}</td>
             <td class="text-center">{{ $exp->date }}</td>
-            <td>{{ $exp->description }}</td>
+            <td>
+                {{ $exp->description }}
+                @if(str_contains(strtolower($exp->description), 'refund'))
+                    <strong>(REFUND)</strong>
+                @endif
+            </td>
             <td class="text-right">Rp {{ number_format($exp->amount,0,',','.') }}</td>
         </tr>
         @empty
@@ -125,7 +155,6 @@
 <h3 class="mt-20">4. Laba Bersih</h3>
 
 <p>
-    Laba Kotor - Pengeluaran = <br>
     Rp {{ number_format($totalLabaKotor,0,',','.') }}
     -
     Rp {{ number_format($totalPengeluaran,0,',','.') }}
@@ -133,41 +162,11 @@
     <strong>Rp {{ number_format($labaBersih,0,',','.') }}</strong>
 </p>
 
-{{-- ======================================================= --}}
-{{-- 5. REKAP AKHIR --}}
-{{-- ======================================================= --}}
-<h3 class="mt-20">5. Rekap Akhir</h3>
+<hr>
 
-<table>
-    <thead>
-        <tr>
-            <th>Keterangan</th>
-            <th>Nominal</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Total Penjualan</td>
-            <td class="text-right">Rp {{ number_format($totalPenjualan,0,',','.') }}</td>
-        </tr>
-        <tr>
-            <td>Total HPP</td>
-            <td class="text-right">Rp {{ number_format($totalHpp,0,',','.') }}</td>
-        </tr>
-        <tr>
-            <td>Total Laba Kotor</td>
-            <td class="text-right">Rp {{ number_format($totalLabaKotor,0,',','.') }}</td>
-        </tr>
-        <tr>
-            <td>Total Pengeluaran</td>
-            <td class="text-right">Rp {{ number_format($totalPengeluaran,0,',','.') }}</td>
-        </tr>
-        <tr>
-            <td><strong>Laba Bersih</strong></td>
-            <td class="text-right"><strong>Rp {{ number_format($labaBersih,0,',','.') }}</strong></td>
-        </tr>
-    </tbody>
-</table>
+<p style="font-size:10px; text-align:center;">
+    Laporan ini dihasilkan otomatis oleh sistem • {{ now()->format('d M Y H:i') }}
+</p>
 
 </body>
 </html>

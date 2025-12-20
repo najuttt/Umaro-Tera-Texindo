@@ -636,26 +636,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-.breadcrumb {
-  background: transparent;
-  font-size: 0.9rem;
-  margin-left: 5px;
-}
-.breadcrumb-item + .breadcrumb-item::before {
-  content: "›";
-  color: #aaa;
-}
-.breadcrumb-item a {
-  color: #FFA500;
-  transition: color 0.2s;
-}
-.breadcrumb-item a:hover {
-  color: #FF7F00;
-}
-.breadcrumb-item.active {
-  color: #000000;
-}
-
 
 </style>
 @endpush

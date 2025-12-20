@@ -1,332 +1,480 @@
 @extends('layouts.product')
 
 @section('content')
+
 <style>
-:root {
-    --navy: #0B2447;
-    --navy-soft: #19376D;
-    --silver: #A9B4C2;
-    --gold: #D4A017;
-    --cream: #F2EDE4;
+:root{
+    --navy:#0B2447;
+    --navy-soft:#132F5C;
+    --gold:#D4A017;
+    --gold-soft:#E6C45C;
+    --light:#F7F8FA;
+    --muted:#6c757d;
 }
 
-/* 🎨 CARD PRODUK */
-.product-card {
-    border: 0;
-    border-radius: 18px;
-    overflow: hidden;
-    background: var(--cream);
-    transition: all 0.3s ease;
-    position: relative;
-    box-shadow: 0 6px 12px rgba(11, 36, 71, 0.2);
+/* ===== PAGE ===== */
+body{
+    background:#f4f6f9;
 }
 
-.product-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 14px 28px rgba(11, 36, 71, 0.28);
+/* ===== CARD ===== */
+.product-card{
+    border-radius:18px;
+    background:#fff;
+    border:1px solid rgba(11,36,71,.08);
+    box-shadow:0 10px 30px rgba(11,36,71,.08);
+    transition:.35s ease;
+    position:relative;
+}
+.product-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 18px 45px rgba(11,36,71,.15);
 }
 
-/* 🖼️ Gambar produk */
-.product-card img {
-    height: 200px;
-    object-fit: cover;
-    border-bottom: 3px solid var(--navy);
+/* ===== IMAGE ===== */
+.product-card img{
+    transition:.4s ease;
+}
+.product-card:hover img{
+    transform:scale(1.06);
 }
 
-/* 🔖 Badge status */
-.badge-status {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 700;
+/* ===== TERLARIS ===== */
+.badge-terlaris{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:linear-gradient(135deg,var(--gold),var(--gold-soft));
+    color:#000;
+    font-size:.7rem;
+    padding:6px 10px;
+    border-radius:12px;
+    box-shadow:0 6px 15px rgba(212,160,23,.45);
 }
 
-/* 🛒 Floating Cart */
-#floating-cart {
-    width: 280px !important;
-    border-radius: 24px;
-    background: var(--cream);
-    border: 2px solid var(--navy);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, .2);
-    animation: fadeInCart .4s ease;
+/* ===== PRICE ===== */
+.price{
+    color:var(--navy);
+    font-weight:700;
 }
 
-#floating-cart h5,
-#floating-cart span {
-    color: var(--navy);
+/* ===== STOCK BADGE ===== */
+.badge-stock{
+    font-size:.7rem;
+    padding:6px 10px;
+    border-radius:12px;
+}
+.stock-ok{
+    background:rgba(11,36,71,.08);
+    color:var(--navy);
+}
+.stock-low{
+    background:rgba(212,160,23,.15);
+    color:#8a6d00;
+}
+.stock-out{
+    background:#e9ecef;
+    color:#6c757d;
 }
 
-/* Item list */
-#floating-cart ul li {
-    background: var(--silver);
-    padding: 8px 10px;
-    border-radius: 10px;
+/* ===== INPUT ===== */
+.qty-input{
+    border-radius:12px;
+    border:1px solid rgba(11,36,71,.2);
+    font-weight:600;
 }
 
-/* Scrollbar */
-#floating-cart ul::-webkit-scrollbar-thumb {
-    background: var(--navy-soft);
+/* ===== BUTTON ===== */
+.btn-cart-main{
+    border-radius:12px;
+    background:linear-gradient(135deg,var(--navy),var(--navy-soft));
+    color:#fff;
+    border:none;
+}
+.btn-cart-main:hover{
+    background:linear-gradient(135deg,var(--navy-soft),var(--navy));
 }
 
-/* Button qty */
-#floating-cart button {
-    border-radius: 8px !important;
-    background: var(--cream);
-    border: 1px solid var(--navy-soft);
+.btn-cart-main:disabled{
+    background:#adb5bd;
+    cursor:not-allowed;
 }
 
-/* Input qty */
-.product-card input[type="number"] {
-    border-radius: 12px;
-    border: 2px solid var(--navy);
+/* ===== FLOATING CART ===== */
+#floating-cart{
+    width:320px;
+    border-radius:22px;
+    border:1px solid rgba(11,36,71,.15);
+    background:#fff;
+    box-shadow:0 20px 50px rgba(11,36,71,.25);
 }
 
-/* Tombol tambah */
-.product-card .btn-success {
-    background: var(--navy);
-    border: none;
-    font-weight: 600;
-    padding: 6px 12px;
+/* ===== CART ITEM ===== */
+.cart-item{
+    background:var(--light);
+    border-radius:14px;
+    padding:10px;
+    margin-bottom:8px;
+}
+.cart-name{
+    font-size:.85rem;
+    font-weight:600;
+    color:var(--navy);
 }
 
-.product-card .btn-success:hover {
-    background: var(--navy-soft);
-    transform: scale(1.03);
+/* ===== CART BTN ===== */
+.btn-cart{
+    border-radius:10px;
+    font-size:.75rem;
 }
 
-/* Checkout button */
-#floating-cart a.btn-warning {
-    background: var(--gold) !important;
-    border: none !important;
-    color: #fff !important;
-    font-weight: 600;
+/* ===== TOTAL ===== */
+.cart-total{
+    border-top:1px dashed rgba(11,36,71,.25);
+    padding-top:10px;
+    font-weight:700;
+    color:var(--navy);
 }
+
+/* ===== PAGINATION NAVY GOLD ===== */
+.pagination-navy{
+    gap:6px;
+}
+
+.pagination-navy .page-link{
+    border-radius:12px;
+    border:1px solid rgba(11,36,71,.2);
+    color:var(--navy);
+    padding:8px 14px;
+    font-weight:600;
+    background:#fff;
+    transition:.3s ease;
+}
+
+.pagination-navy .page-link:hover{
+    background:rgba(11,36,71,.08);
+    color:var(--navy);
+}
+
+.pagination-navy .page-item.active .page-link{
+    background:linear-gradient(135deg,var(--gold),var(--gold-soft));
+    color:#000;
+    border:none;
+    box-shadow:0 6px 18px rgba(212,160,23,.45);
+}
+
+.pagination-navy .page-item.disabled .page-link{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
 </style>
 
 <div class="container py-5">
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <h2 class="fw-bold text-dark mb-0">Daftar Produk</h2>
-        <small class="text-muted"><i class="bi bi-calendar-check me-1"></i>{{ now()->format('d M Y, H:i') }}</small>
-    </div>
+    <h3 class="fw-bold mb-4">Daftar Produk</h3>
 
-    <!-- Filter -->
-    <form method="GET" class="row g-3 mb-4">
+    {{-- ================= FILTER ================= --}}
+    <div class="row mb-4 g-2">
         <div class="col-md-4">
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Cari produk...">
+            <input type="text" id="search"
+                   class="form-control"
+                   placeholder="Cari produk atau kategori...">
         </div>
+
         <div class="col-md-3">
-            <select name="kategori" class="form-select">
+            <select id="kategori" class="form-select">
                 <option value="none">Semua Kategori</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->name }}" {{ request('kategori')==$cat->name?'selected':'' }}>
-                        {{ $cat->name }}
-                    </option>
+                @foreach($categories as $c)
+                    <option value="{{ $c->name }}">{{ $c->name }}</option>
                 @endforeach
             </select>
         </div>
+
         <div class="col-md-3">
-            <select name="sort" class="form-select" onchange="applySortFilter(this.value)">
-                <option value="stok_terbanyak" {{ request('sort')=='stok_terbanyak'?'selected':'' }}>Stok Terbanyak</option>
-                <option value="stok_sedikit" {{ request('sort')=='stok_sedikit'?'selected':'' }}>Stok Sedikit</option>
-                <option value="terbaru" {{ request('sort')=='terbaru'?'selected':'' }}>Terbaru</option>
-                <option value="terlama" {{ request('sort')=='terlama'?'selected':'' }}>Terlama</option>
-                <option value="nama_az" {{ request('sort')=='nama_az'?'selected':'' }}>Nama A-Z</option>
-                <option value="nama_za" {{ request('sort')=='nama_za'?'selected':'' }}>Nama Z-A</option>
+            <select id="sort" class="form-select">
+                <option value="nama_az">Nama A-Z</option>
+                <option value="nama_za">Nama Z-A</option>
+                <option value="terbaru">Terbaru</option>
+                <option value="stok_terbanyak">Stok Terbanyak</option>
             </select>
         </div>
-    </form>
-
-    <!-- Grid Produk -->
-    <div class="row gy-4">
-        @forelse ($items as $item)
-        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-            <div class="card product-card position-relative shadow-sm">
-
-                @php
-                    $imgPath = $item->image && file_exists(public_path('storage/'.$item->image))
-                        ? asset('storage/'.$item->image)
-                        : asset('default.png');
-                @endphp
-
-                <img src="{{ $imgPath }}" alt="{{ $item->name }}" class="card-img-top">
-
-                @if($item->stock == 0)
-                    <span class="badge-status bg-danger text-white">Habis</span>
-                @elseif($item->stock < 5)
-                    <span class="badge-status bg-warning text-dark">Menipis</span>
-                @endif
-
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <h5 class="fw-semibold mb-2 text-truncate">{{ $item->name }}</h5>
-                    <p class="small mb-1"><i class="bi bi-tag me-1"></i> Kategori: <span class="fw-semibold text-dark">{{ $item->category->name ?? '-' }}</span></p>
-                    <p class="small mb-3"><i class="bi bi-box me-1"></i> Stok: <span class="fw-semibold {{ $item->stock==0?'text-danger':'text-success' }}">{{ $item->stock }}</span></p>
-
-                    <div class="d-flex align-items-center gap-2">
-                        <input type="number" id="qty-{{ $item->id }}" class="form-control text-center border-warning" value="1" min="1" max="{{ $item->stock }}" {{ $item->stock==0?'disabled':'' }}>
-                        <button class="btn btn-success btn-sm add-to-cart" data-item="{{ $item->id }}" {{ $item->stock==0?'disabled':'' }}>
-                            <i class="bi bi-cart-plus me-1"></i> Tambah
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @empty
-        <div class="col-12 text-center py-5">
-            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
-            <p class="text-muted mb-0">Tidak ada produk ditemukan.</p>
-        </div>
-        @endforelse
     </div>
 
-    @if ($items instanceof \Illuminate\Pagination\LengthAwarePaginator)
-    <div class="mt-4 d-flex justify-content-center">
-        {{ $items->links('pagination::bootstrap-5') }}
+<div class="row g-4" id="product-grid">
+@foreach($items as $item)
+
+@php
+    $stok = $item->stock ?? 0;
+    $habis = $stok <= 0;
+    $menipis = $stok > 0 && $stok <= 5;
+@endphp
+
+<div class="col-md-3 col-sm-6">
+    <div class="product-card p-3 h-100 d-flex flex-column">
+
+        @if(isset($item->total_ordered) && $item->total_ordered > 5)
+            <span class="badge-terlaris">TERLARIS</span>
+        @endif
+
+        <div class="ratio ratio-1x1 mb-3 rounded overflow-hidden">
+            <img src="{{ asset('storage/'.$item->image) }}"
+                 class="img-fluid object-fit-cover">
+        </div>
+
+        <h6 class="fw-semibold text-truncate mb-1">
+            {{ $item->name }}
+        </h6>
+
+        <div class="price mb-2">
+            Rp {{ number_format($item->price,0,',','.') }}
+        </div>
+
+        <div class="mb-3">
+            @if($habis)
+                <span class="badge-stock stock-out">Stok Habis</span>
+            @elseif($menipis)
+                <span class="badge-stock stock-low">Sisa {{ $stok }}</span>
+            @else
+                <span class="badge-stock stock-ok">Stok {{ $stok }}</span>
+            @endif
+        </div>
+
+        <div class="mt-auto d-flex gap-2">
+            <input type="number"
+                id="qty-{{ $item->id }}"
+                class="form-control qty-input text-center"
+                value="1"
+                min="1"
+                max="{{ $stok }}"
+                {{ $habis ? 'disabled' : '' }}>
+
+            <button
+                class="btn btn-cart-main add-to-cart"
+                data-id="{{ $item->id }}"
+                {{ $habis ? 'disabled' : '' }}>
+                <i class="bi bi-cart-plus"></i>
+            </button>
+        </div>
+
     </div>
-    @endif
 </div>
 
+@endforeach
+</div>
 
-<!-- FLOATING CART -->
-<div id="floating-cart" class="position-fixed end-0 top-50 translate-middle-y me-3 shadow-lg p-3 bg-white rounded-4 border border-warning" style="width: 260px; z-index: 1050;">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="mb-0"><i class="bi bi-cart3 me-1"></i> Keranjang</h5>
-        <span id="cart-count" class="badge rounded-pill bg-danger">{{ $cartCount ?? 0 }}</span>
-    </div>
+{{-- ================= PAGINATION ================= --}}
+@if ($items->hasPages())
+<div class="d-flex justify-content-center mt-5">
+    <nav>
+        <ul class="pagination pagination-navy">
 
-    <ul id="cart-items" class="list-unstyled mb-2" style="max-height: 300px; overflow-y: auto;">
-        @if($cartItems && $cartItems->count() > 0)
-            @foreach($cartItems as $c)
-                <li class="d-flex justify-content-between align-items-center mb-2">
-                    <span>{{ $c->item->name }}</span>
-                    <div class="d-flex gap-2 align-items-center">
-                        <button class="btn btn-sm btn-light px-2" onclick="updateQty({{ $c->item_id }}, {{ $c->quantity - 1 }})">-</button>
-                        <span class="fw-bold">{{ $c->quantity }}</span>
-                        <button class="btn btn-sm btn-light px-2" onclick="updateQty({{ $c->item_id }}, {{ $c->quantity + 1 }})">+</button>
-                        <button class="btn btn-danger btn-sm px-2" onclick="deleteItem({{ $c->item_id }})">x</button>
-                    </div>
+            {{-- PREV --}}
+            <li class="page-item {{ $items->onFirstPage() ? 'disabled' : '' }}">
+                <a class="page-link"
+                   href="{{ $items->previousPageUrl() ?? '#' }}">
+                   &laquo;
+                </a>
+            </li>
+
+            {{-- PAGE NUMBER --}}
+            @foreach ($items->getUrlRange(1, $items->lastPage()) as $page => $url)
+                <li class="page-item {{ $page == $items->currentPage() ? 'active' : '' }}">
+                    <a class="page-link" href="{{ $url }}">
+                        {{ $page }}
+                    </a>
                 </li>
             @endforeach
-        @else
-            <li class="text-muted">Belum ada item</li>
-        @endif
+
+            {{-- NEXT --}}
+            <li class="page-item {{ $items->hasMorePages() ? '' : 'disabled' }}">
+                <a class="page-link"
+                   href="{{ $items->nextPageUrl() ?? '#' }}">
+                   &raquo;
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+@endif
+
+{{-- ================= FLOATING CART ================= --}}
+<div id="floating-cart"
+     class="position-fixed end-0 top-50 translate-middle-y me-3 p-3 bg-white"
+     style="z-index:1050">
+
+    <div class="d-flex justify-content-between mb-2">
+        <h6 class="fw-bold">
+            <i class="bi bi-cart3"></i> Keranjang
+        </h6>
+        <span id="cart-count" class="badge bg-danger">0</span>
+    </div>
+
+    <ul id="cart-items" class="list-unstyled mb-2"
+        style="max-height:260px;overflow:auto">
+        <li class="text-muted small">Keranjang kosong</li>
     </ul>
 
-    <a href="{{ route('checkout.page') }}" class="btn btn-warning w-100">
+    <div class="cart-total d-flex justify-content-between mb-2">
+        <span>Total</span>
+        <span id="cart-total">Rp 0</span>
+    </div>
+
+    <a href="{{ route('checkout.page') }}"
+       id="btn-checkout"
+       class="btn btn-warning w-100 fw-semibold disabled">
         Checkout
     </a>
 </div>
-@endsection
 
+@endsection
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded',()=>{
 
-    const search = document.querySelector('input[name="q"]');
-    if(search){
-        search.addEventListener('input', function(){
-            const url = new URL(window.location.href);
-            url.searchParams.set('q', this.value);
-            window.location.href = url.toString();
+    const grid = document.getElementById('product-grid');
+    const search = document.getElementById('search');
+    const kategori = document.getElementById('kategori');
+    const sort = document.getElementById('sort');
+
+    /* ================= FILTER AJAX ================= */
+    function fetchProducts(){
+        const params = new URLSearchParams({
+            q: search.value,
+            kategori: kategori.value,
+            sort: sort.value
+        });
+
+        fetch("{{ route('produk') }}?"+params,{
+            headers:{'X-Requested-With':'XMLHttpRequest'}
+        })
+        .then(res=>res.text())
+        .then(html=>{
+            const dom = new DOMParser().parseFromString(html,'text/html');
+            grid.innerHTML = dom.querySelector('#product-grid').innerHTML;
+            bindAddToCart();
         });
     }
 
-    const kategori = document.querySelector('select[name="kategori"]');
-    if(kategori){
-        kategori.addEventListener('change', function(){
-            const url = new URL(window.location.href);
-            url.searchParams.set('kategori', this.value);
-            window.location.href = url.toString();
-        });
-    }
-
-    window.applySortFilter = function(sortValue) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('sort', sortValue);
-        window.location.href = url.toString();
-    }
-
-    document.querySelectorAll('.add-to-cart').forEach(btn=>{
-        btn.addEventListener('click', function(e){
-            e.preventDefault();
-            const itemId = this.dataset.item;
-            const quantity = document.getElementById('qty-'+itemId).value;
-
-            fetch("{{ route('produk.add_to_guest_cart') }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({item_id:itemId, quantity:quantity})
-            })
-            .then(res=>res.json())
-            .then(data=>{
-                refreshCartList(data.cart_items);
-            })
-        });
+    [search,kategori,sort].forEach(el=>{
+        el.addEventListener('input',fetchProducts);
     });
 
-    function refreshCartList(items){
+    /* ================= LOAD CART (SINGLE SOURCE OF TRUTH) ================= */
+    function loadCart(){
+        fetch("{{ route('cart.get') }}",{
+            headers:{'X-Requested-With':'XMLHttpRequest'}
+        })
+        .then(r=>r.json())
+        .then(d=>refreshCart(d.cart_items));
+    }
+
+    /* ================= ADD TO CART ================= */
+    function bindAddToCart(){
+        document.querySelectorAll('.add-to-cart').forEach(btn=>{
+            btn.onclick = ()=>{
+                const id = btn.dataset.id;
+                const qty = document.getElementById('qty-'+id)?.value || 1;
+
+                fetch("{{ route('produk.add_to_guest_cart') }}",{
+                    method:'POST',
+                    headers:{
+                        'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                        'Content-Type':'application/json'
+                    },
+                    body:JSON.stringify({item_id:id,quantity:qty})
+                })
+                .then(()=>loadCart()); // ⬅️ WAJIB
+            };
+        });
+    }
+
+    /* ================= UPDATE QTY ================= */
+    window.updateQty = (id,qty)=>{
+        if(qty < 1) return;
+
+        fetch("{{ route('cart.update') }}",{
+            method:'POST',
+            headers:{
+                'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({item_id:id,quantity:qty})
+        })
+        .then(()=>loadCart()); // ⬅️ WAJIB
+    };
+
+    /* ================= DELETE ITEM ================= */
+    window.deleteItem = id =>{
+        fetch("{{ route('cart.delete') }}",{
+            method:'POST',
+            headers:{
+                'X-CSRF-TOKEN':"{{ csrf_token() }}",
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({item_id:id})
+        })
+        .then(()=>loadCart()); // ⬅️ WAJIB
+    };
+
+    /* ================= RENDER CART ================= */
+    function refreshCart(items){
         const list = document.getElementById('cart-items');
         const count = document.getElementById('cart-count');
+        const totalEl = document.getElementById('cart-total');
+        const checkout = document.getElementById('btn-checkout');
+
         list.innerHTML = '';
+        let totalQty = 0;
+        let totalHarga = 0;
 
         if(!items || items.length === 0){
-            list.innerHTML = `<li class="text-muted">Belum ada item</li>`;
+            list.innerHTML = '<li class="text-muted small">Keranjang kosong</li>';
             count.textContent = 0;
+            totalEl.textContent = 'Rp 0';
+            checkout.classList.add('disabled');
             return;
         }
 
         items.forEach(i=>{
+            const qty = Number(i.quantity) || 0;
+            const price = Number(i.price) || 0;
+            const sub = qty * price;
+
+            totalQty += qty;
+            totalHarga += sub;
+
             list.innerHTML += `
-                <li class="d-flex justify-content-between align-items-center mb-2">
-                    <span>${i.name}</span>
-                    <div class="d-flex gap-2 align-items-center">
-                        <button class="btn btn-sm btn-light px-2" onclick="updateQty(${i.id}, ${i.quantity - 1})">-</button>
-                        <span class="fw-bold">${i.quantity}</span>
-                        <button class="btn btn-sm btn-light px-2" onclick="updateQty(${i.id}, ${i.quantity + 1})">+</button>
-                        <button class="btn btn-danger btn-sm px-2" onclick="deleteItem(${i.id})">x</button>
-                    </div>
-                </li>
-            `;
+            <li class="cart-item">
+                <div class="cart-name">${i.name ?? '-'}</div>
+                <small class="text-muted">
+                    Subtotal: Rp ${sub.toLocaleString('id-ID')}
+                </small>
+                <div class="d-flex justify-content-end gap-1 mt-1">
+                    <button class="btn btn-outline-secondary btn-cart"
+                        onclick="updateQty(${i.item_id},${qty-1})">−</button>
+                    <span class="fw-bold">${qty}</span>
+                    <button class="btn btn-outline-secondary btn-cart"
+                        onclick="updateQty(${i.item_id},${qty+1})">+</button>
+                    <button class="btn btn-outline-danger btn-cart"
+                        onclick="deleteItem(${i.item_id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </li>`;
         });
 
-        count.textContent = items.reduce((acc, cur)=> acc + cur.quantity, 0);
+        count.textContent = totalQty;
+        totalEl.textContent = 'Rp ' + totalHarga.toLocaleString('id-ID');
+        checkout.classList.remove('disabled');
     }
 
-    window.updateQty = function(item_id, quantity){
-        if(quantity < 1) return;
-
-        fetch("{{ route('cart.update') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type":"application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({ item_id, quantity })
-        })
-        .then(res => res.json())
-        .then(data => refreshCartList(data.cart_items));
-    }
-
-    window.deleteItem = function(item_id){
-        fetch("{{ route('cart.delete') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type":"application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({ item_id })
-        })
-        .then(res => res.json())
-        .then(data => refreshCartList(data.cart_items));
-    }
-
+    /* ================= INIT ================= */
+    bindAddToCart();
+    loadCart(); // ⬅️ INIT PERTAMA
 });
 </script>
+
 @endsection

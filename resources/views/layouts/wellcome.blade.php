@@ -20,181 +20,181 @@
 
     <style>
         :root {
-        --primary: #ff9900;
-        --primary-dark: #ff7a00;
-        --text-dark: #1f1f1f;
-        --text-light: #6c757d;
-        }
+  /* 🎯 CORE COLORS */
+  --navy: #0B1C2D;
+  --navy-soft: #13293D;
+  --gold: #D4AF37;
+  --gold-soft: #E6C15A;
 
-        body {
-        font-family: 'Inter', sans-serif;
-        scroll-behavior: smooth;
-        background-color: #fff;
-        color: var(--text-dark);
-        }
+  --text-dark: #0F172A;
+  --text-light: #64748B;
+  --white-soft: #F8FAFC;
+}
 
-        /* 🌐 NAVBAR */
-        .navbar {
-        transition: all 0.4s ease-in-out;
-        padding: 0.8rem 2rem;
-        z-index: 1050;
-        backdrop-filter: blur(6px);
-        background-color: rgba(255, 255, 255, 0.8);
-        }
+/* =====================
+   GLOBAL
+===================== */
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--white-soft);
+  color: var(--text-dark);
+  scroll-behavior: smooth;
+}
 
-        .navbar.scrolled {
-        background-color: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
+/* =====================
+   NAVBAR
+===================== */
+.navbar {
+  background: rgba(244, 244, 245, 0.85);
+  backdrop-filter: blur(8px);
+  transition: all 0.4s ease;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+}
 
-        .navbar-brand .navbar-logo {
-        height: 48px;
-        width: auto;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-        transition: transform 0.3s ease;
-        }
+.navbar.scrolled {
+  background: rgba(246, 247, 248, 0.95);
+}
 
-        .navbar-brand:hover .navbar-logo {
-        transform: scale(1.05);
-        }
+.navbar-brand .navbar-logo {
+  height: 48px;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.4));
+}
 
-        .brand-text {
-        font-family: 'p', sans-serif !important;
-        font-weight: 900;
-        font-size: 1.7rem;
-        letter-spacing: 1px;
-        color: var(--primary-dark);
-        transition: color 0.3s ease;
-        }
+.brand-text {
+  font-weight: 900;
+  font-size: 1.7rem;
+  letter-spacing: 1px;
+  color: var(--gold);
+  transition: all .3s ease;
+}
 
-        .navbar:hover .brand-text {
-        color: var(--primary);
-        }
+.navbar:hover .brand-text {
+  color: var(--gold-soft);
+}
 
-        /* ✨ Menu Link */
-        .nav-link {
-        color: var(--text-dark);
-        font-weight: 500;
-        margin: 0 10px;
-        position: relative;
-        transition: all 0.4s ease;
-        }
+/* =====================
+   NAV LINKS
+===================== */
+.nav-link {
+  color: #0c0c0c !important;
+  font-weight: 500;
+  position: relative;
+  transition: all .35s ease;
+}
 
-        /* 🌟 Underline animasi lembut */
-        .nav-link::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        bottom: -6px;
-        width: 0%;
-        height: 2px;
-        background-color: var(--primary-dark);
-        border-radius: 2px;
-        transform: translateX(-50%);
-        transition: all 0.35s ease-in-out;
-        opacity: 0;
-        }
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+  transform: translateX(-50%);
+  transition: all .35s ease;
+  opacity: 0;
+}
 
-        .nav-link:hover::after,
-        .nav-link.active::after {
-        width: 60%;
-        opacity: 1;
-        }
+.nav-link:hover,
+.nav-link.active {
+  color: var(--gold) !important;
+}
 
-        .nav-link:hover,
-        .nav-link.active {
-        color: var(--primary-dark);
-        transform: translateY(-1px);
-        }
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 60%;
+  opacity: 1;
+}
 
-        /* 🔐 Tombol Login */
-        .btn-login {
-        background: linear-gradient(90deg, var(--primary-dark), var(--primary));
-        color: #fff !important;
-        border-radius: 25px;
-        padding: 8px 22px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 3px 6px rgba(255, 153, 0, 0.4);
-        }
+/* =====================
+   LOGIN BUTTON
+===================== */
+.btn-login {
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  color: #fdfdfd !important;
+  border-radius: 30px;
+  padding: 9px 24px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(212,175,55,.45);
+  transition: all .3s ease;
+}
 
-        .btn-login:hover {
-        opacity: 0.9;
-        transform: translateY(-2px) scale(1.03);
-        box-shadow: 0 5px 12px rgba(255, 153, 0, 0.6);
-        }
+.btn-login:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(212,175,55,.7);
+}
 
-        /* 🌅 Section */
-        section {
-        padding: 100px 0;
-        transition: all 0.5s ease;
-        }
+/* =====================
+   SECTION
+===================== */
+section {
+  padding: 100px 0;
+}
 
-    /* 🌑 Footer Hitam Elegan */
-    footer {
-    background: #000;
-    color: #f1f1f1;
-    padding: 3rem 0 1.5rem 0;
-    border-top: 2px solid rgba(255, 255, 255, 0.1);
-    }
+/* =====================
+   FOOTER
+===================== */
+footer {
+  background: linear-gradient(180deg, var(--navy), #050D16);
+  color: #E5E7EB;
+  border-top: 2px solid rgba(212,175,55,.25);
+}
 
-    /* 🏛️ Logo & Judul */
-    .footer-logo {
-    height: 200px;
-    width: auto;
-    filter: brightness(1.2) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.1));
-    transition: transform 0.3s ease;
-    }
+.footer-logo {
+  height: 200px;
+  filter: brightness(1.1) drop-shadow(0 4px 10px rgba(0,0,0,.6));
+  transition: transform .3s ease;
+}
 
-    .footer-logo:hover {
-    transform: scale(1.05);
-    }
+.footer-logo:hover {
+  transform: scale(1.06);
+}
 
-    /* 🔤 Teks Instansi */
-    footer h5 {
-    font-size: 1.5rem;       /* Ukuran diperbesar */
-    font-weight: 800;        /* Tebal biar menonjol */
-    letter-spacing: 0.5px;   /* Sedikit jarak antar huruf */
-    color: #fff;
-    text-transform: uppercase; /* Biar kesannya resmi */
-    }
+footer h5 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: .6px;
+}
 
-    footer p {
-    font-size: 0.95rem;
-    color: #ccc;
-    margin-top: 5px;
-    line-height: 1.5;
-    }
+footer p {
+  color: #CBD5E1;
+}
 
-    /* 🔗 Link Sosial */
-    footer a {
-    color: #f8f8f8;
-    transition: all 0.3s ease;
-    }
+/* =====================
+   FOOTER LINK
+===================== */
+footer a {
+  color: #E5E7EB;
+  transition: all .3s ease;
+}
 
-    footer a:hover {
-    color: var(--primary);
-    transform: scale(1.1);
-    }
+footer a:hover {
+  color: var(--gold);
+  transform: scale(1.08);
+}
 
-    hr {
-    border-color: rgba(255, 255, 255, 0.15);
-    }
+/* =====================
+   SHOPEE BUTTON
+===================== */
+footer a[href*="shopee"] {
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft)) !important;
+  color: #000 !important;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(212,175,55,.45);
+}
 
-
-
-        /* 📱 RESPONSIVE */
-        @media (max-width: 992px) {
-        .navbar {
-            padding: 1rem;
-        }
-        .brand-text {
-            font-size: 1.4rem;
-        }
-        .navbar-logo {
-            height: 36px;
-        }
-        }
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 992px) {
+  .brand-text {
+    font-size: 1.4rem;
+  }
+  .navbar-logo {
+    height: 38px;
+  }
+}
     </style>
     </head>
 

@@ -19,105 +19,104 @@
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
 <style>
-:root {
-    --primary: #ff9900;
-    --primary-dark: #ff7a00;
-    --text-dark: #1f1f1f;
-    --text-light: #6c757d;
+/* =====================
+   🎨 CORE COLOR (SAMA DENGAN LANDING)
+===================== */
+:root{
+  --navy:#0B1C2D;
+  --navy-soft:#13293D;
+  --gold:#D4AF37;
+  --gold-soft:#E6C15A;
+
+  --text-dark:#0F172A;
+  --text-light:#64748B;
+  --white-soft:#F8FAFC;
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #fff;
-    color: var(--text-dark);
+/* =====================
+   GLOBAL
+===================== */
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--white-soft);
+  color:var(--text-dark);
 }
 
-/* 🌐 NAVBAR */
-.navbar {
-    transition: all 0.4s ease-in-out;
-    padding: 0.8rem 2rem;
-    z-index: 1050;
-    backdrop-filter: blur(6px);
-    background-color: rgba(255, 255, 255, 0.8);
+/* =====================
+   NAVBAR
+===================== */
+.navbar{
+  background:rgba(244,244,245,.85);
+  backdrop-filter:blur(8px);
+  box-shadow:0 6px 24px rgba(0,0,0,.35);
+  transition:.4s;
 }
 
-.navbar.scrolled {
-    background-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+.navbar.scrolled{
+  background:rgba(246,247,248,.95);
 }
 
-/* Logo */
-.navbar-brand .navbar-logo {
-    height: 48px;
-    width: auto;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    transition: transform 0.3s ease;
+.navbar-brand .navbar-logo{
+  height:48px;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.4));
 }
 
-.navbar-brand:hover .navbar-logo {
-    transform: scale(1.05);
+.brand-text{
+  font-weight:900;
+  font-size:1.7rem;
+  letter-spacing:1px;
+  color:var(--gold);
+  transition:.3s;
 }
 
-/* Brand text */
-.brand-text {
-    font-weight: 900;
-    font-size: 1.7rem;
-    letter-spacing: 1px;
-    color: var(--primary-dark);
-    transition: color 0.3s ease;
+.navbar:hover .brand-text{
+  color:var(--gold-soft);
 }
 
-.navbar:hover .brand-text {
-    color: var(--primary);
+/* =====================
+   BUTTON – KEMBALI
+===================== */
+.btn-back{
+  background:linear-gradient(135deg,var(--gold),var(--gold-soft));
+  color:#000 !important;
+  border-radius:30px;
+  padding:9px 24px;
+  font-weight:700;
+  box-shadow:0 6px 18px rgba(212,175,55,.45);
+  transition:.3s;
 }
 
-/* 🔙 Tombol Kembali */
-.btn-back {
-    background: linear-gradient(90deg, var(--primary-dark), var(--primary));
-    color: #fff !important;
-    border-radius: 25px;
-    padding: 8px 22px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 8px rgba(255, 153, 0, 0.4);
+.btn-back:hover{
+  transform:translateY(-2px) scale(1.05);
+  box-shadow:0 10px 30px rgba(212,175,55,.7);
 }
 
-.btn-back:hover {
-    opacity: 0.95;
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 6px 14px rgba(255, 153, 0, 0.6);
+/* =====================
+   BUTTON – REFUND
+===================== */
+.btn-refund{
+  background:transparent;
+  border:2px solid var(--gold);
+  color:var(--gold) !important;
+  border-radius:30px;
+  padding:8px 22px;
+  font-weight:700;
+  transition:.3s;
 }
 
-/* ♻️ Tombol Refund */
-.btn-refund {
-    background: transparent;
-    color: var(--primary-dark) !important;
-    border: 2px solid var(--primary-dark);
-    border-radius: 25px;
-    padding: 7px 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+.btn-refund:hover{
+  background:linear-gradient(135deg,var(--gold),var(--gold-soft));
+  color:#000 !important;
+  transform:translateY(-2px);
+  box-shadow:0 8px 22px rgba(212,175,55,.55);
 }
 
-.btn-refund:hover {
-    background: linear-gradient(90deg, var(--primary-dark), var(--primary));
-    color: #fff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(255, 153, 0, 0.4);
-}
-
-
-/* Responsive */
-@media (max-width: 992px) {
-    .navbar {
-        padding: 1rem;
-    }
-    .brand-text {
-        font-size: 1.4rem;
-    }
-    .navbar-logo {
-        height: 36px;
-    }
+/* =====================
+   RESPONSIVE
+===================== */
+@media(max-width:992px){
+  .brand-text{font-size:1.4rem}
+  .navbar-logo{height:38px}
 }
 </style>
 </head>
@@ -126,40 +125,36 @@ body {
 
 <!-- 🧭 NAVBAR PRODUK -->
 <nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container d-flex align-items-center justify-content-between">
+  <div class="container d-flex align-items-center justify-content-between">
 
-        <!-- Brand -->
-        <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-            <img src="{{ asset('assets/img/icons/logo1.jpeg') }}" alt="Logo UMARO" class="navbar-logo">
-            <span class="brand-text">UMARO</span>
-        </a>
+    <!-- Brand -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+      <img src="{{ asset('assets/img/icons/logo4.png') }}" class="navbar-logo">
+      <span class="brand-text">UMARO</span>
+    </a>
 
-        <!-- Toggler -->
-        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProduct">
-            <i class="bi bi-list fs-2 text-dark"></i>
-        </button>
+    <!-- Toggler -->
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProduct">
+      <i class="bi bi-list fs-2 text-dark"></i>
+    </button>
 
-        <!-- MENU PRODUK -->
-        <div class="collapse navbar-collapse justify-content-end gap-3" id="navbarProduct">
+    <!-- Menu -->
+    <div class="collapse navbar-collapse justify-content-end gap-3" id="navbarProduct">
+      <a href="{{ route('refund.form') }}" class="btn-refund mt-3 mt-lg-0">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Refund
+      </a>
 
-            <!-- ♻️ Tombol Refund -->
-            <a href="{{ route('refund.form') }}" class="btn-refund mt-3 mt-lg-0">
-                <i class="bi bi-arrow-counterclockwise me-1"></i> Refund
-            </a>
-
-            <!-- 🔙 Tombol Kembali -->
-            <a href="{{ route('welcome') }}" class="btn-back mt-3 mt-lg-0">
-                <i class="bi bi-arrow-left-circle me-1"></i> Kembali
-            </a>
-
-        </div>
-
+      <a href="{{ route('welcome') }}" class="btn-back mt-3 mt-lg-0">
+        <i class="bi bi-arrow-left-circle me-1"></i> Kembali
+      </a>
     </div>
+
+  </div>
 </nav>
 
 <!-- MAIN -->
 <main class="pt-5 mt-4">
-    @yield('content')
+  @yield('content')
 </main>
 
 <!-- Scripts -->
@@ -167,13 +162,11 @@ body {
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
 <script>
-    // Scroll Blur Navbar
-    window.addEventListener('scroll', function () {
-        const navbar = document.querySelector('.navbar');
-        navbar.classList.toggle('scrolled', window.scrollY > 20);
-    });
-
-    AOS.init({ duration: 900, once: true, easing: 'ease-in-out' });
+window.addEventListener('scroll',()=>{
+  document.querySelector('.navbar')
+    .classList.toggle('scrolled',window.scrollY>20);
+});
+AOS.init({duration:900,once:true,easing:'ease-in-out'});
 </script>
 
 @yield('scripts')
