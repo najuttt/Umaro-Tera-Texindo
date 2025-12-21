@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Guest;
+use App\Models\Order;
 use App\Models\Item_in;
 use App\Models\Item_out;
 use App\Models\Item_out_guest;
@@ -19,306 +20,155 @@ class SuperAdminController extends Controller
 {
     public function index()
     {
-        /**
-         * ============================
-         * 🔹 DATA USER DAN GUEST TERATAS
-         * ============================
-         */
-        $topUsers = Item_out::select(
-                'users.id',
-                'users.name',
-                'users.email',
-                'users.role',
-                DB::raw('COUNT(item_outs.id) as total_out')
-            )
-            ->join('carts', 'item_outs.cart_id', '=', 'carts.id')
-            ->join('users', 'carts.user_id', '=', 'users.id')
-            ->groupBy('users.id', 'users.name', 'users.email', 'users.role')
-            ->orderByDesc('total_out')
-            ->take(5)
-            ->get();
-
-        $topGuests = Item_out_guest::select(
-                'guests.id',
-                'guests.name',
-                DB::raw('NULL as email'),
-                DB::raw('"Guest" as role'),
-                DB::raw('COUNT(item_out_guests.id) as total_out')
-            )
-            ->join('guests', 'item_out_guests.guest_id', '=', 'guests.id')
-            ->groupBy('guests.id', 'guests.name')
-            ->orderByDesc('total_out')
-            ->take(5)
-            ->get();
-
-        $topUsers = $topUsers->concat($topGuests)->sortByDesc('total_out')->take(5)->values();
-
-        /**
-         * ============================
-         * 🔹 DATA TABEL TERBARU
-         * ============================
-         */
-        $itemIns = Item_in::with('item')->latest()->take(5)->get();
-
-        $itemOutsUser = Item_out::with(['item', 'cart.user'])
-            ->latest()->take(5)->get()
-            ->map(function ($out) {
-                $out->source = 'user';
-                return $out;
-            });
-
-        $itemOutsGuest = Item_out_guest::with('guest')
-            ->latest()->take(5)->get()
-            ->map(function ($out) {
-                $out->source = 'guest';
-                return $out;
-            });
-
-        $itemOuts = $itemOutsUser->concat($itemOutsGuest)
-            ->sortByDesc('created_at')
-            ->take(5)
-            ->values();
-
-        /**
-         * ============================
-         * 🔹 BARANG HAMPIR KEDALUARSA
-         * ============================
-         */
-
-        $expiredSoon = Item_in::whereNotNull('expired_at')
-            ->whereBetween('expired_at', [Carbon::now(), Carbon::now()->addDays(10)])
-            ->with(['item', 'supplier'])
-            ->orderBy('expired_at', 'asc')
-            ->get();
-
-        /**
-         * ============================
-         * 🔹 PERHITUNGAN JUMLAH KELUAR (DARI GUEST CART)
-         * ============================
-         */
-        $sumGuestQuantity = function ($query) {
-            return Guest_carts_item::whereIn('id', $query->pluck('guest_cart_item_id'))
-                ->sum('quantity');
-        };
-
-        /**
-         * ============================
-         * 🔹 GRAFIK MASUK & KELUAR
-         * ============================
-         */
-
-        // --- Harian
-        $dailyLabels = [];
-        $dailyMasuk = [];
-        $dailyKeluar = [];
-        $startOfWeek = Carbon::now()->startOfWeek();
-        $endOfWeek = Carbon::now()->endOfWeek();
-
-        for ($date = $startOfWeek->copy(); $date->lte($endOfWeek); $date->addDay()) {
-            $dailyLabels[] = $date->format('D');
-            $dailyMasuk[] = Item_in::whereDate('created_at', $date)->sum('quantity') ?? 0;
-
-            // Pegawai
-            $pegawaiOut = Item_out::whereDate('created_at', $date)->sum('quantity') ?? 0;
-            // Guest
-            $guestOut = Guest_carts_item::whereDate('created_at', $date)->sum('quantity') ?? 0;
-
-            $dailyKeluar[] = $pegawaiOut + $guestOut;
-        }
-
-        // --- Mingguan (berdasarkan minggu kalender asli)
-        $weeklyLabels = [];
-        $weeklyMasuk = [];
-        $weeklyKeluar = [];
-
-        $startOfMonth = Carbon::now()->startOfMonth()->startOfWeek(Carbon::MONDAY);
-        $endOfMonth = Carbon::now()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-
-        for ($weekStart = $startOfMonth->copy(); $weekStart->lte($endOfMonth); $weekStart->addWeek()) {
-            $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
-
-            $weeklyLabels[] = 'Minggu ' . $weekStart->format('W'); // W = nomor minggu dalam tahun
-            $weeklyMasuk[] = Item_in::whereBetween('created_at', [$weekStart, $weekEnd])->sum('quantity') ?? 0;
-
-            $pegawaiOut = Item_out::whereBetween('created_at', [$weekStart, $weekEnd])->sum('quantity') ?? 0;
-            $guestOut = Guest_carts_item::whereBetween('created_at', [$weekStart, $weekEnd])->sum('quantity') ?? 0;
-
-            $weeklyKeluar[] = $pegawaiOut + $guestOut;
-        }
-
-        // --- Bulanan
-        $monthlyLabels = [];
-        $monthlyMasuk = [];
-        $monthlyKeluar = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $monthlyLabels[] = Carbon::create()->month($m)->format('M');
-            $monthlyMasuk[] = Item_in::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', $m)->sum('quantity') ?? 0;
-
-            $pegawaiOut = Item_out::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', $m)->sum('quantity') ?? 0;
-            $guestOut = Guest_carts_item::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', $m)->sum('quantity') ?? 0;
-
-            $monthlyKeluar[] = $pegawaiOut + $guestOut;
-        }
-
-        // --- Tahunan
-        $yearlyLabels = [];
-        $yearlyMasuk = [];
-        $yearlyKeluar = [];
-        $startYear = Carbon::now()->year - 4;
-        $endYear = Carbon::now()->year;
-        for ($y = $startYear; $y <= $endYear; $y++) {
-            $yearlyLabels[] = $y;
-            $yearlyMasuk[] = Item_in::whereYear('created_at', $y)->sum('quantity') ?? 0;
-
-            $pegawaiOut = Item_out::whereYear('created_at', $y)->sum('quantity') ?? 0;
-            $guestOut = Guest_carts_item::whereYear('created_at', $y)->sum('quantity') ?? 0;
-
-            $yearlyKeluar[] = $pegawaiOut + $guestOut;
-        }
-
-        // --- Triwulan
-        $triwulanLabels = ['Triwulan 1', 'Triwulan 2', 'Triwulan 3', 'Triwulan 4'];
-        $triwulanMasuk = [];
-        $triwulanKeluar = [];
-        for ($i = 0; $i < 4; $i++) {
-            $start = Carbon::create(Carbon::now()->year, ($i * 3) + 1, 1)->startOfMonth();
-            $end = $start->copy()->addMonths(2)->endOfMonth();
-
-            $pegawaiOut = Item_out::whereBetween('created_at', [$start, $end])->sum('quantity') ?? 0;
-            $guestOut = Guest_carts_item::whereBetween('created_at', [$start, $end])->sum('quantity') ?? 0;
-
-            $triwulanMasuk[] = Item_in::whereBetween('created_at', [$start, $end])->sum('quantity') ?? 0;
-            $triwulanKeluar[] = $pegawaiOut + $guestOut;
-        }
-
-        // --- Semester
-        $semesterLabels = ['Semester 1', 'Semester 2'];
-        $semesterMasuk = [];
-        $semesterKeluar = [];
-        for ($i = 0; $i < 2; $i++) {
-            $start = Carbon::create(Carbon::now()->year, ($i * 6) + 1, 1)->startOfMonth();
-            $end = $start->copy()->addMonths(5)->endOfMonth();
-
-            $pegawaiOut = Item_out::whereBetween('created_at', [$start, $end])->sum('quantity') ?? 0;
-            $guestOut = Guest_carts_item::whereBetween('created_at', [$start, $end])->sum('quantity') ?? 0;
-
-            $semesterMasuk[] = Item_in::whereBetween('created_at', [$start, $end])->sum('quantity') ?? 0;
-            $semesterKeluar[] = $pegawaiOut + $guestOut;
-        }
-
-        /**
-         * ============================
-         * 🔹 GROWTH
-         * ============================
-         */
-        $thisMonth = $monthlyMasuk[Carbon::now()->month - 1] ?? 0;
-        $lastMonth = $monthlyMasuk[Carbon::now()->month - 2] ?? 0;
-        $growth = ($lastMonth > 0)
-            ? (($thisMonth - $lastMonth) / $lastMonth) * 100
-            : 0;
-
-        /**
-         * ============================
-         * 🔹 INFORMASI TAMBAHAN
-         * ============================
-         */
-        $lowStockItems = Item::where('stock', '<', 11)
-                             ->whereIn('id', Item_in::pluck('item_id'))  // hanya item yang pernah masuk
-                             ->orderBy('stock', 'asc')
-                             ->take(5)
-                             ->get();
-
-        $lastUpdateItemIn = Item_in::latest('updated_at')->value('updated_at');
-        $lastUpdateExpired = Item_in::whereNotNull('expired_at')
-            ->whereBetween('expired_at', [Carbon::now(), Carbon::now()->addDays(30)])
-            ->latest('updated_at')
-            ->value('updated_at');
-
-        /**
-         * ============================
-         * 🔹 JUMLAH DATA
-         * ============================
-         */
+        // ============================
+        // 🔹 JUMLAH DATA
+        // ============================
         $itemNow = Item::count();
         $supplierNow = Supplier::count();
         $userNow = User::count();
         $guestNow = Guest::count();
+        $ordersNow = Order::count();
 
-        // Hari ini
+        // Hari ini & kemarin
         $itemToday = Item::whereDate('created_at', today())->count();
         $supplierToday = Supplier::whereDate('created_at', today())->count();
         $userToday = User::whereDate('created_at', today())->count();
         $guestToday = Guest::whereDate('created_at', today())->count();
+        $ordersToday = Order::whereDate('created_at', today())->count();
 
-        // Kemarin
         $itemYesterday = Item::whereDate('created_at', today()->subDay())->count();
         $supplierYesterday = Supplier::whereDate('created_at', today()->subDay())->count();
         $userYesterday = User::whereDate('created_at', today()->subDay())->count();
         $guestYesterday = Guest::whereDate('created_at', today()->subDay())->count();
+        $ordersYesterday = Order::whereDate('created_at', today()->subDay())->count();
 
-        // Selisih & Persentase
+        // Selisih
         $itemDiff = $itemToday - $itemYesterday;
         $supplierDiff = $supplierToday - $supplierYesterday;
         $userDiff = $userToday - $userYesterday;
         $guestDiff = $guestToday - $guestYesterday;
+        $orderDiff = $ordersToday - $ordersYesterday;
 
+        // Persentase growth
         $itemPercent = $itemYesterday > 0 ? round(($itemDiff / $itemYesterday) * 100, 1) : 0;
         $supplierPercent = $supplierYesterday > 0 ? round(($supplierDiff / $supplierYesterday) * 100, 1) : 0;
         $userPercent = $userYesterday > 0 ? round(($userDiff / $userYesterday) * 100, 1) : 0;
         $guestPercent = $guestYesterday > 0 ? round(($guestDiff / $guestYesterday) * 100, 1) : 0;
 
-        /**
-         * ============================
-         * 🔹 RETURN KE VIEW
-         * ============================
-         */
+        // ============================
+        // 🔹 DATA TABEL TERBARU
+        // ============================
+        $itemIns = Item_in::with('item')->latest()->take(5)->get();
+        $ordersIns = Order::latest()->take(5)->get();
+        $lowStockItems = Item::where('stock','<',11)
+                             ->whereIn('id', Item_in::pluck('item_id'))
+                             ->orderBy('stock','asc')
+                             ->take(5)
+                             ->get();
+
+        // ============================
+        // 🔹 GRAFIK MASUK & ORDER
+        // ============================
+        $dailyLabels = []; $dailyMasuk = []; $dailyOrder = [];
+        $weeklyLabels = []; $weeklyMasuk = []; $weeklyOrder = [];
+        $monthlyLabels = []; $monthlyMasuk = []; $monthlyOrder = [];
+        $triwulanLabels = ['Triwulan 1','Triwulan 2','Triwulan 3','Triwulan 4']; $triwulanMasuk = []; $triwulanOrder = [];
+        $semesterLabels = ['Semester 1','Semester 2']; $semesterMasuk = []; $semesterOrder = [];
+        $yearlyLabels = []; $yearlyMasuk = []; $yearlyOrder = [];
+
+        // Harian (minggu ini)
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
+        for($date=$startOfWeek->copy(); $date->lte($endOfWeek); $date->addDay()){
+            $dailyLabels[] = $date->format('D');
+            $dailyMasuk[] = Item_in::whereDate('created_at',$date)->sum('quantity') ?? 0;
+            $dailyOrder[] = Order::whereDate('created_at',$date)->count();
+        }
+
+        // Mingguan (bulan ini)
+        $startOfMonth = Carbon::now()->startOfMonth()->startOfWeek(Carbon::MONDAY);
+        $endOfMonth = Carbon::now()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+        for($weekStart=$startOfMonth->copy(); $weekStart->lte($endOfMonth); $weekStart->addWeek()){
+            $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+            $weeklyLabels[] = 'Minggu '.$weekStart->format('W');
+            $weeklyMasuk[] = Item_in::whereBetween('created_at',[$weekStart,$weekEnd])->sum('quantity') ?? 0;
+            $weeklyOrder[] = Order::whereBetween('created_at',[$weekStart,$weekEnd])->count();
+        }
+
+        // Bulanan (tahun ini)
+        for($m=1;$m<=12;$m++){
+            $monthlyLabels[] = Carbon::create()->month($m)->format('M');
+            $monthlyMasuk[] = Item_in::whereYear('created_at',Carbon::now()->year)->whereMonth('created_at',$m)->sum('quantity') ?? 0;
+            $monthlyOrder[] = Order::whereYear('created_at',Carbon::now()->year)->whereMonth('created_at',$m)->count();
+        }
+
+        // Triwulan
+        for($i=0;$i<4;$i++){
+            $start = Carbon::create(Carbon::now()->year,($i*3)+1,1)->startOfMonth();
+            $end = $start->copy()->addMonths(2)->endOfMonth();
+            $triwulanMasuk[] = Item_in::whereBetween('created_at',[$start,$end])->sum('quantity') ?? 0;
+            $triwulanOrder[] = Order::whereBetween('created_at',[$start,$end])->count();
+        }
+
+        // Semester
+        for($i=0;$i<2;$i++){
+            $start = Carbon::create(Carbon::now()->year,($i*6)+1,1)->startOfMonth();
+            $end = $start->copy()->addMonths(5)->endOfMonth();
+            $semesterMasuk[] = Item_in::whereBetween('created_at',[$start,$end])->sum('quantity') ?? 0;
+            $semesterOrder[] = Order::whereBetween('created_at',[$start,$end])->count();
+        }
+
+        // Tahunan (5 tahun terakhir)
+        $startYear = Carbon::now()->year - 4;
+        $endYear = Carbon::now()->year;
+        for($y=$startYear;$y<=$endYear;$y++){
+            $yearlyLabels[] = $y;
+            $yearlyMasuk[] = Item_in::whereYear('created_at',$y)->sum('quantity') ?? 0;
+            $yearlyOrder[] = Order::whereYear('created_at',$y)->count();
+        }
+
+        // ============================
+        // 🔹 GROWTH
+        // ============================
+        $thisMonth = $monthlyMasuk[Carbon::now()->month-1] ?? 0;
+        $lastMonth = $monthlyMasuk[Carbon::now()->month-2] ?? 0;
+        $growth = ($lastMonth>0) ? (($thisMonth-$lastMonth)/$lastMonth)*100 : 0;
+
+        // ============================
+        // 🔹 RETURN KE VIEW
+        // ============================
         return view('role.super_admin.dashboard', [
-            'categories' => Category::count(),
             'item' => $itemNow,
             'suppliers' => $supplierNow,
             'users' => $userNow,
             'guests' => $guestNow,
-
+            'orders' => $ordersNow,          
             'itemDiff' => $itemDiff,
-            'itemPercent' => $itemPercent,
             'supplierDiff' => $supplierDiff,
-            'supplierPercent' => $supplierPercent,
             'userDiff' => $userDiff,
-            'userPercent' => $userPercent,
             'guestDiff' => $guestDiff,
-            'guestPercent' => $guestPercent,
-
+            'orderDiff' => $orderDiff,       
             'itemIns' => $itemIns,
-            'itemOuts' => $itemOuts,
-            'expiredSoon' => $expiredSoon,
-            'topUsers' => $topUsers,
-
-            // Chart data
+            'lowStockItems' => $lowStockItems,
             'dailyLabels' => $dailyLabels,
             'dailyMasuk' => $dailyMasuk,
-            'dailyKeluar' => $dailyKeluar,
+            'dailyOrder' => $dailyOrder,
             'weeklyLabels' => $weeklyLabels,
             'weeklyMasuk' => $weeklyMasuk,
-            'weeklyKeluar' => $weeklyKeluar,
+            'weeklyOrder' => $weeklyOrder,
             'monthlyLabels' => $monthlyLabels,
             'monthlyMasuk' => $monthlyMasuk,
-            'monthlyKeluar' => $monthlyKeluar,
-            'yearlyLabels' => $yearlyLabels,
-            'yearlyMasuk' => $yearlyMasuk,
-            'yearlyKeluar' => $yearlyKeluar,
+            'monthlyOrder' => $monthlyOrder,
             'triwulanLabels' => $triwulanLabels,
             'triwulanMasuk' => $triwulanMasuk,
-            'triwulanKeluar' => $triwulanKeluar,
+            'triwulanOrder' => $triwulanOrder,
             'semesterLabels' => $semesterLabels,
             'semesterMasuk' => $semesterMasuk,
-            'semesterKeluar' => $semesterKeluar,
+            'semesterOrder' => $semesterOrder,
+            'yearlyLabels' => $yearlyLabels,
+            'yearlyMasuk' => $yearlyMasuk,
+            'yearlyOrder' => $yearlyOrder,
             'growth' => $growth,
-            'lastUpdateItemIn' => $lastUpdateItemIn,
-            'lastUpdateExpired' => $lastUpdateExpired,
-            'lowStockItems' => $lowStockItems,
         ]);
     }
 }

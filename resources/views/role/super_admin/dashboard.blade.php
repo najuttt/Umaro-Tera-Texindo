@@ -33,7 +33,7 @@
       <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden">
         <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
           <div>
-            <h6 class="text-muted mb-1">Trend Barang Masuk</h6>
+            <h6 class="text-muted mb-1">Trend Barang Masuk & Order</h6>
             <h5 class="fw-bold mb-0 text-dark">Statistik Barang</h5>
           </div>
 
@@ -65,7 +65,7 @@
           $cards = [
             ['title' => 'Barang', 'value' => $item, 'diff' => $itemDiff, 'icon' => 'ri-pie-chart-2-line', 'color' => '#FF9800'],
             ['title' => 'Pemasok', 'value' => $suppliers, 'diff' => $supplierDiff, 'icon' => 'ri-truck-line', 'color' => '#FFC300'],
-            ['title' => 'Pengguna', 'value' => $users, 'diff' => $userDiff, 'icon' => 'ri-user-3-line', 'color' => '#FFE000']
+            ['title' => 'Order', 'value' => $orders, 'diff' => $orderDiff, 'icon' => 'ri-shopping-cart-line', 'color' => '#FFE000']
           ];
         @endphp
 
@@ -192,13 +192,14 @@
 <script>
 const ctx=document.getElementById('overviewChart').getContext('2d');
 
+// Chart data baru, ada "masuk" & "order"
 const chartData={
-  daily:{labels:@json($dailyLabels),masuk:@json($dailyMasuk)},
-  weekly:{labels:@json($weeklyLabels),masuk:@json($weeklyMasuk)},
-  monthly:{labels:@json($monthlyLabels),masuk:@json($monthlyMasuk)},
-  triwulan:{labels:@json($triwulanLabels),masuk:@json($triwulanMasuk)},
-  semester:{labels:@json($semesterLabels),masuk:@json($semesterMasuk)},
-  yearly:{labels:@json($yearlyLabels),masuk:@json($yearlyMasuk)}
+  daily:{labels:@json($dailyLabels),masuk:@json($dailyMasuk),order:@json($dailyOrder)},
+  weekly:{labels:@json($weeklyLabels),masuk:@json($weeklyMasuk),order:@json($weeklyOrder)},
+  monthly:{labels:@json($monthlyLabels),masuk:@json($monthlyMasuk),order:@json($monthlyOrder)},
+  triwulan:{labels:@json($triwulanLabels),masuk:@json($triwulanMasuk),order:@json($triwulanOrder)},
+  semester:{labels:@json($semesterLabels),masuk:@json($semesterMasuk),order:@json($semesterOrder)},
+  yearly:{labels:@json($yearlyLabels),masuk:@json($yearlyMasuk),order:@json($yearlyOrder)}
 };
 
 let currentPeriod='weekly';
@@ -213,6 +214,15 @@ const itemChart=new Chart(ctx,{
         data:chartData[currentPeriod].masuk,
         borderColor:'#FF9800',
         backgroundColor:'rgba(255,193,7,0.25)',
+        borderWidth:2,
+        fill:true,
+        tension:0.35
+      },
+      {
+        label:'Order',
+        data:chartData[currentPeriod].order,
+        borderColor:'#28a745',
+        backgroundColor:'rgba(40,167,69,0.25)',
         borderWidth:2,
         fill:true,
         tension:0.35
@@ -243,6 +253,7 @@ document.querySelectorAll('[data-period]').forEach(btn=>{
 function updateChart(newData){
   itemChart.data.labels=newData.labels;
   itemChart.data.datasets[0].data=newData.masuk;
+  itemChart.data.datasets[1].data=newData.order;
   itemChart.update();
 }
 
