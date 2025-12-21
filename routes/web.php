@@ -13,9 +13,9 @@ use App\Http\Controllers\PermintaanController;
 use App\Http\Controllers\ManualOrderController;
 use App\Http\Controllers\PembukuanController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Models\Visitor;
 use App\Models\User;
-use App\Http\Controllers\ManualBookController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\SuperAdmin\OrderSuperAdminController;
 use App\Http\Controllers\RefundRequestController;
@@ -215,9 +215,7 @@ Route::middleware(['auth', 'role:super_admin'])
             Route::get('/export', [PembukuanController::class, 'export'])->name('export');
         });
 
-        // Manualbook
-        Route::get('/manual-book', [ManualBookController::class, 'index'])
-            ->name('manual_book.index');
+       
     });
 
 
@@ -377,12 +375,7 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::post('/refunds/{id}/reject', [RefundRequestController::class, 'reject'])
             ->name('refunds.reject');
-
-    /* ==========================
-     * Manual Book
-     * ========================== */
-    Route::get('/manual-book', [ManualBookAdminController::class, 'index'])
-        ->name('manual_book.index');
+   
 });
 
 
@@ -482,4 +475,12 @@ Route::middleware('web')->group(function() {
     Route::post('/refund/submit', [RefundRequestController::class, 'submit'])
         ->name('refund.submit');
 
-require __DIR__ . '/auth.php';
+    Route::get('/auth/masuk-9xA2K', [AuthenticatedSessionController::class, 'create'])
+    ->middleware('login.token')
+    ->name('login');
+
+    Route::post('/auth/masuk-9xA2K', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:5,1');
+
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('logout');

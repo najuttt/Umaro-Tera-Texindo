@@ -134,6 +134,25 @@
                         <i class="ri-eye-line me-2 text-warning"></i> Lihat
                       </a>
                     </li>
+                    <li>
+                      <a class="dropdown-item d-flex align-items-center"
+                        href="{{ route('super_admin.items.edit', $item->id) }}">
+                        <i class="ri-edit-2-line me-2 text-primary"></i> Edit
+                      </a>
+                    </li>
+                    <li>
+                      <form action="{{ route('super_admin.items.destroy', $item->id) }}" 
+                            method="POST"
+                            onsubmit="return confirm('Yakin mau hapus item ini? Data bakal ilang permanen 😬')">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit"
+                          class="dropdown-item d-flex align-items-center text-danger">
+                          <i class="ri-delete-bin-line me-2"></i> Hapus
+                        </button>
+                      </form>
+                    </li>
                   </ul>
                 </div>
               </td>

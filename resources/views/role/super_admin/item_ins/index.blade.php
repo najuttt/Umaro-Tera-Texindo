@@ -84,7 +84,6 @@
               <th>Barang</th>
               <th>Jumlah</th>
               <th>Supplier</th>
-              <th>Tanggal Kadaluarsa</th>
               <th>Status</th>
               <th>Dibuat Oleh</th>
               <th>Aksi</th>
@@ -92,37 +91,10 @@
           </thead>
           <tbody>
             @forelse($items_in as $row)
-              @php
-                  $now = \Carbon\Carbon::now();
-                  $daysLeft = $row->expired_at ? $now->diffInDays($row->expired_at, false) : null;
-
-                  if (!$row->expired_at) {
-                      $statusText = 'Tidak Berlaku';
-                      $statusClass = 'bg-secondary-subtle text-secondary';
-                  } elseif ($daysLeft < 0) {
-                      $statusText = 'Kadaluarsa';
-                      $statusClass = 'bg-danger-subtle text-danger';
-                  } elseif ($daysLeft <= 10) {
-                      $statusText = 'Hampir kadaluarsa';
-                      $statusClass = 'bg-warning-subtle text-warning';
-                  } else {
-                      $statusText = 'Belum Kadaluarsa';
-                      $statusClass = 'bg-success-subtle text-success';
-                  }
-
-                  $itemStock = $row->item->stock ?? 0;
-                  $stockBadge = $itemStock <= 10
-                      ? 'bg-danger-subtle text-danger'
-                      : ($itemStock <= 30
-                          ? 'bg-warning-subtle text-warning'
-                          : 'bg-success-subtle text-success');
-              @endphp
-
               <tr class="text-center table-row-hover">
                 <td class="text-start fw-semibold text-dark">{{ $row->item->name ?? '-' }}</td>
                 <td>{{ $row->quantity }}</td>
                 <td class="text-start">{{ $row->supplier->name ?? '-' }}</td>
-                <td>{{ $row->expired_at ? $row->expired_at->format('d M Y') : '-' }}</td>
                 <td><span class="badge px-3 py-2 rounded-pill {{ $statusClass }}">{{ $statusText }}</span></td>
                 <td>{{ $row->creator->name ?? '-' }}</td>
                 <td>
@@ -178,7 +150,6 @@
                         </div>
                         <div class="col-md-6">
                           <p><strong>Tanggal Masuk:</strong> {{ $row->created_at->format('d M Y') }}</p>
-                          <p><strong>Tanggal Kadaluarsa:</strong> {{ $row->expired_at ? $row->expired_at->format('d M Y') : '-' }}</p>
                           <p><strong>Status:</strong> <span class="badge rounded-pill px-3 py-2 {{ $statusClass }}">{{ $statusText }}</span></p>
                         </div>
                       </div>

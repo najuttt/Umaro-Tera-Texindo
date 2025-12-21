@@ -37,36 +37,5 @@ class UserSeeder extends Seeder
             'role' => 'pegawai',
         ]);
 
-        // Pegawai
-        User::create([
-            'name' => 'Edi',
-            'email' => 'edi@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'pegawai',
-        ]);
-
-        // Pegawai
-        User::create([
-            'name' => 'Udin',
-            'email' => 'udin@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'pegawai',
-        ]);
-
-        // Pegawai
-        User::create([
-            'name' => 'Pasep',
-            'email' => 'pasep@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'pegawai',
-        ]);
-
-        // Pegawai
-        User::create([
-            'name' => 'Atang',
-            'email' => 'atang@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'pegawai',
-        ]);
     }
 }

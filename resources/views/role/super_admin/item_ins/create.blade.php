@@ -90,26 +90,6 @@
           @error('tanggal_masuk') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
-        {{-- Tanggal Expired --}}
-        <div class="mb-4">
-          <label class="form-label fw-semibold text-dark">Tanggal Kedaluwarsa</label>
-          <div x-show="useExpired" x-transition>
-            <input type="date" name="expired_at" id="expired_at"
-                   min="{{ \Carbon\Carbon::today()->toDateString() }}"
-                   value="{{ old('expired_at') }}"
-                   class="form-control shadow-sm border-0"
-                   style="border-left:4px solid #FF9800 !important;"
-                   x-bind:required="useExpired">
-          </div>
-          <div class="form-check form-switch mt-2">
-            <input class="form-check-input" type="checkbox" id="toggleExpired" x-model="useExpired">
-            <label class="form-check-label text-muted" for="toggleExpired">
-              Gunakan tanggal kedaluwarsa
-            </label>
-          </div>
-          @error('expired_at') <small class="text-danger">{{ $message }}</small> @enderror
-        </div>
-
         {{-- Tombol --}}
         <div class="d-flex justify-content-end gap-2 mt-4">
           <button type="submit"

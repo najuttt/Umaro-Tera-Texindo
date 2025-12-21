@@ -223,9 +223,6 @@ footer a[href*="shopee"] {
             <li class="nav-item"><a class="nav-link" href="#stats">Statistik</a></li>
             <li class="nav-item"><a class="nav-link" href="#lokasi">Lokasi</a></li>
             </ul>
-            <a href="{{ route('login') }}" class="btn-login ms-lg-4 mt-3 mt-lg-0">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Login
-            </a>
         </div>
         </div>
     </nav>

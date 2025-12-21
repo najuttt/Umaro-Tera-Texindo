@@ -51,27 +51,6 @@
           @error('name') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
-        {{-- Barcode --}}
-        <div class="mb-4">
-          <label class="form-label fw-semibold text-dark">Barcode / Kode</label>
-          <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-body py-3">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-semibold text-secondary">Punya barcode bawaan?</span>
-                <div class="form-check form-switch m-0">
-                  <input class="form-check-input" type="checkbox" id="toggleBarcode">
-                  <label class="form-check-label text-muted" for="toggleBarcode">Isi manual</label>
-                </div>
-              </div>
-              <input type="text" name="code" id="barcodeInput"
-                     class="form-control shadow-sm border-0"
-                     placeholder="Scan / isi barcode barang"
-                     value="{{ old('code') }}" style="display:none;border-left:4px solid #FF9800 !important;">
-              @error('code') <small class="text-danger">{{ $message }}</small> @enderror
-            </div>
-          </div>
-        </div>
-
         {{-- Kategori --}}
         <div class="mb-4">
           <label class="form-label fw-semibold text-dark">Kategori</label>
