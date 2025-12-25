@@ -84,18 +84,42 @@
               <th>Barang</th>
               <th>Jumlah</th>
               <th>Supplier</th>
-              <th>Status</th>
               <th>Dibuat Oleh</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             @forelse($items_in as $row)
+              @php
+                  $now = \Carbon\Carbon::now();
+                  $daysLeft = $row->expired_at ? $now->diffInDays($row->expired_at, false) : null;
+
+                  if (!$row->expired_at) {
+                      $statusText = 'Tidak Berlaku';
+                      $statusClass = 'bg-secondary-subtle text-secondary';
+                  } elseif ($daysLeft < 0) {
+                      $statusText = 'Kadaluarsa';
+                      $statusClass = 'bg-danger-subtle text-danger';
+                  } elseif ($daysLeft <= 10) {
+                      $statusText = 'Hampir kadaluarsa';
+                      $statusClass = 'bg-warning-subtle text-warning';
+                  } else {
+                      $statusText = 'Belum Kadaluarsa';
+                      $statusClass = 'bg-success-subtle text-success';
+                  }
+
+                  $itemStock = $row->item->stock ?? 0;
+                  $stockBadge = $itemStock <= 10
+                      ? 'bg-danger-subtle text-danger'
+                      : ($itemStock <= 30
+                          ? 'bg-warning-subtle text-warning'
+                          : 'bg-success-subtle text-success');
+              @endphp
+
               <tr class="text-center table-row-hover">
-                <td class="text-start fw-semibold text-dark">{{ $row->item->name ?? '-' }}</td>
+                <td class=" fw-semibold text-dark">{{ $row->item->name ?? '-' }}</td>
                 <td>{{ $row->quantity }}</td>
-                <td class="text-start">{{ $row->supplier->name ?? '-' }}</td>
-                <td><span class="badge px-3 py-2 rounded-pill {{ $statusClass }}">{{ $statusText }}</span></td>
+                <td>{{ $row->supplier->name ?? '-' }}</td>
                 <td>{{ $row->creator->name ?? '-' }}</td>
                 <td>
                   <div class="dropdown">

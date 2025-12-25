@@ -230,15 +230,19 @@ body{
             Rp {{ number_format($item->price,0,',','.') }}
         </div>
 
-        <div class="mb-3">
-            @if($habis)
-                <span class="badge-stock stock-out">Stok Habis</span>
-            @elseif($menipis)
-                <span class="badge-stock stock-low">Sisa {{ $stok }}</span>
-            @else
-                <span class="badge-stock stock-ok">Stok {{ $stok }}</span>
-            @endif
-        </div>
+        @if($habis)
+            <span class="badge-stock stock-out">
+                Stok Habis
+            </span>
+        @elseif($menipis)
+            <span class="badge-stock stock-low">
+                Sisa {{ $stok }} {{ $item->unit->name ?? '' }}
+            </span>
+        @else
+            <span class="badge-stock stock-ok">
+                Stok {{ $stok }} {{ $item->unit->name ?? '' }}
+            </span>
+        @endif
 
         <div class="mt-auto d-flex gap-2">
             <input type="number"

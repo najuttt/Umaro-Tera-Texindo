@@ -88,23 +88,6 @@
           </div>
         </div>
 
-        {{-- Expired --}}
-        <div class="mb-4">
-          <label class="form-label fw-semibold text-dark">Tanggal Kedaluwarsa</label>
-          <div x-show="useExpired" x-transition>
-            <input type="date" name="expired_at" id="expired_at"
-                   min="{{ \Carbon\Carbon::today()->toDateString() }}"
-                   value="{{ $item_in->expired_at ? $item_in->expired_at->format('Y-m-d') : '' }}"
-                   class="form-control shadow-sm border-0"
-                   style="border-left:4px solid #FF9800 !important;"
-                   x-bind:required="useExpired" x-bind:disabled="!useExpired">
-          </div>
-          <div class="form-check form-switch mt-2">
-            <input class="form-check-input" type="checkbox" id="toggleExpired" x-model="useExpired">
-            <label class="form-check-label text-muted" for="toggleExpired">Gunakan tanggal kedaluwarsa</label>
-          </div>
-        </div>
-
         {{-- Tombol --}}
         <div class="d-flex justify-content-end gap-2 mt-4">
           <button type="submit"
