@@ -72,6 +72,36 @@ body {
     color: var(--primary);
 }
 
+/* Avatar Navbar */
+.avatar-navbar {
+    border: 2px solid var(--primary-dark);
+    transition: transform 0.2s ease;
+}
+
+.avatar-navbar:hover {
+    transform: scale(1.1);
+}
+
+/* Dropdown khusus avatar */
+#avatarMenu {
+    display: none;
+    position: absolute;
+    top: 50px; /* di bawah avatar */
+    right: 0;
+    min-width: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    z-index: 1100;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    padding: 5px 0;
+    transition: all 0.2s ease;
+}
+
+#avatarMenu.show {
+    display: block;
+}
+
 /* 🔙 Tombol Kembali */
 .btn-back {
     background: linear-gradient(90deg, var(--primary-dark), var(--primary));
@@ -146,6 +176,46 @@ body {
             <a href="{{ route('produk') }}" class="btn-back mt-3 mt-lg-0">
                 <i class="bi bi-arrow-left-circle me-1"></i> Kembali
             </a>
+
+            <!-- 👤 Google Avatar + Logout -->
+            @auth
+            <div class="dropdown">
+                <a href="#" data-bs-toggle="dropdown" class="d-flex align-items-center">
+
+                    @if(Auth::user()->google_avatar)
+                        <img 
+                            src="{{ Auth::user()->google_avatar }}"
+                            class="rounded-circle avatar-navbar"
+                            width="40" height="40"
+                            alt="Avatar">
+                    @else
+                        <div
+                            class="rounded-circle d-flex align-items-center justify-content-center avatar-navbar"
+                            style="
+                                width:40px;
+                                height:40px;
+                                background:linear-gradient(135deg,#d4af37,#f1e5ac);
+                                font-weight:800;
+                                color:#000;
+                            ">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </div>
+                    @endif
+
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="dropdown-item">
+                                <i class="ri-logout-box-line me-1"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            @endauth
 
         </div>
 

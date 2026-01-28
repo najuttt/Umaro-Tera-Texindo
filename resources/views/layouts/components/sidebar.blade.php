@@ -30,17 +30,6 @@
             </a>
         </li>
         @endif
-
-        @php
-            use App\Models\Cart;
-            $pendingCount = Cart::where('status', 'pending')->count();
-            $approvedCount = Cart::whereIn('status', ['approved', 'approved_partially'])
-                ->whereHas('user', function ($u) { $u->where('role', 'pegawai'); })
-                ->whereHas('cartItems', function ($q) { $q->whereNull('scanned_at'); })
-                ->whereDoesntHave('cartItems', function ($q) { $q->whereNotNull('scanned_at'); }, '=', 0)
-                ->count();
-        @endphp
-
         <!-- PEGAWAI -->
         @if (auth()->user()->role === 'pegawai')
         <li class="menu-item {{ Route::is('pegawai.produk') ? 'active' : '' }}">

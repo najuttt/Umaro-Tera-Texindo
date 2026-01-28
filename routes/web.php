@@ -19,6 +19,10 @@ use App\Models\User;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\SuperAdmin\OrderSuperAdminController;
 use App\Http\Controllers\RefundRequestController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MidtransCallbackController;
 use Illuminate\Support\Facades\Log;
 
 // Role Controllers
@@ -32,21 +36,17 @@ use App\Http\Controllers\Role\admin\ProdukController;
 use App\Http\Controllers\Role\admin\RejectController;
 use App\Http\Controllers\Role\admin\TransaksiItemOutController;
 use App\Http\Controllers\Role\admin\AdminPegawaiController;
-use App\Http\Controllers\Role\Admin\ManualBookAdminController;
 use App\Http\Controllers\SearchController;
 
 /*
 |--------------------------------------------------------------------------
 | 🌟 Default Route (Welcome Page)
 |--------------------------------------------------------------------------
-| Saat pertama kali aplikasi diakses, user diarahkan ke "welcome.blade.php".
-| Kalau sudah login, langsung ke dashboard sesuai role.
+| Welcome page bisa diakses oleh siapa aja (login atau belum)
 */
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-
+    // ✅ HAPUS REDIRECT KE DASHBOARD BIAR WELCOME PAGE SELALU BISA DIAKSES
+    
     try {
         $ip = request()->ip();
         $userAgent = request()->userAgent();
@@ -76,7 +76,6 @@ Route::get('/', function () {
 
     return view('welcome', compact('totalPengunjung', 'pegawaiAktif'));
 })->name('welcome');
-
 /*
 |--------------------------------------------------------------------------
 | Banned User Management
@@ -450,37 +449,61 @@ Route::middleware('web')->group(function() {
     Route::post('/cart/delete', [ProductController::class, 'deleteGuestCart'])
         ->name('cart.delete');
 
+    // Get cart
+    Route::get('/cart/get', [ProductController::class, 'getGuestCart'])
+        ->name('cart.get');
+
     // Halaman checkout (VIEW)
     Route::get('/checkout', [ProductController::class, 'checkoutPage'])
         ->name('checkout.page');
 
-    Route::get('/cart/get',[ProductController::class,'getGuestCart'])
-    ->name('cart.get');
+    // ✅ CHECKOUT WA
+    Route::post('/checkout/guest/process', [ProductController::class, 'checkoutGuestCart'])
+        ->name('checkout.guest.process');
 
-    // Checkout save ke database (order pending)
-    Route::post('/produk/checkout-guest', [ProductController::class, 'checkoutGuestCart'])
-        ->name('produk.checkout_guest_cart');
-
-    // Endpoint khusus generate pesan WA (optional)
+    // ✅ SEND WA
     Route::post('/checkout/send-whatsapp', [ProductController::class, 'sendWhatsApp'])
         ->name('send.whatsapp');
+
+    // ✅ CHECKOUT MIDTRANS
+    Route::post('/checkout/pay', [CheckoutController::class, 'pay'])
+        ->middleware('auth')
+        ->name('checkout.pay');
 });
 
-    Route::get('/refund', [RefundRequestController::class, 'form'])
-        ->name('refund.form');
+// Google Auth
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])
+    ->name('google.login');
 
-    Route::post('/refund/check-order', [RefundRequestController::class, 'checkOrder'])
-        ->name('refund.check');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 
-    Route::post('/refund/submit', [RefundRequestController::class, 'submit'])
-        ->name('refund.submit');
+// Midtrans Callback
+Route::post('/midtrans/callback', [MidtransCallbackController::class, 'handle']);
 
-    Route::get('/auth/masuk-9xA2K', [AuthenticatedSessionController::class, 'create'])
+// Refund
+Route::get('/refund', [RefundRequestController::class, 'form'])
+    ->name('refund.form');
+
+Route::post('/refund/check-order', [RefundRequestController::class, 'checkOrder'])
+    ->name('refund.check');
+
+Route::post('/refund/submit', [RefundRequestController::class, 'submit'])
+    ->name('refund.submit');
+
+// Login
+Route::get('/auth/masuk-9xA2K', [AuthenticatedSessionController::class, 'create'])
     ->middleware('login.token')
+    ->name('login.admin');
+
+Route::post('/auth/masuk-9xA2K', [AuthenticatedSessionController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('login.admin.store');
+
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])
     ->name('login');
 
-    Route::post('/auth/masuk-9xA2K', [AuthenticatedSessionController::class, 'store'])
-        ->middleware('throttle:5,1');
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+    ->name('login.guest.store');
 
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');

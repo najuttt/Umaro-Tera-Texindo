@@ -7,17 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'order_code',
+        'user_id',
         'customer_name',
         'customer_phone',
         'customer_address',
-        'status'
+        'total_price',
+        'status',
+        'payment_method',
+        'payment_reference'
     ];
 
     public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
@@ -27,14 +34,19 @@ class Order extends Model
         return $this->hasOne(RefundRequest::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    
     public function getTotalQtyAttribute()
     {
-        return $this->orderItems->sum('quantity');
+        return $this->items->sum('quantity');
     }
 
     public function getTotalSaleAttribute()
     {
-        return $this->orderItems->sum(function ($item) {
+        return $this->items->sum(function ($item) {
             return ($item->item->price ?? 0) * $item->quantity;
         });
     }

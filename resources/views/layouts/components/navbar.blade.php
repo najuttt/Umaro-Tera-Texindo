@@ -9,13 +9,6 @@
             $cartexceptactive = \App\Models\Cart::withCount('cartItems')
                 ->where('user_id', Auth::id())
                 ->where('status', '!=', 'active');
-            $notifications = \App\Models\Notification::where('user_id', Auth::id())
-                ->where('status', 'unread')
-                ->latest()
-                ->take(5)
-                ->get();
-
-            $notifCount = $notifications->count();
 
             // 🔥 AMBIL KATEGORI BERDASARKAN KONTEKS HALAMAN
             $assignedCategories = collect();
@@ -54,13 +47,6 @@
             $cartexceptactive = \App\Models\Cart::withCount('cartItems')
                 ->where('user_id', Auth::id())
                 ->where('status', '!=', 'active');
-            $notifications = \App\Models\Notification::where('user_id', Auth::id())
-                ->where('status', 'unread')
-                ->latest()
-                ->take(5)
-                ->get();
-
-            $notifCount = $notifications->count();
         @endphp
         <style>
             /* Override default offcanvas supaya lebih seperti floating panel */

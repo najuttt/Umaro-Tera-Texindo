@@ -128,7 +128,7 @@ body{
   <div class="container d-flex align-items-center justify-content-between">
 
     <!-- Brand -->
-    <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('welcome') }}">
       <img src="{{ asset('assets/img/icons/logo4.png') }}" class="navbar-logo">
       <span class="brand-text">UMARO</span>
     </a>
@@ -140,12 +140,14 @@ body{
 
     <!-- Menu -->
     <div class="collapse navbar-collapse justify-content-end gap-3" id="navbarProduct">
-      <a href="{{ route('refund.form') }}" class="btn-refund mt-3 mt-lg-0">
-        <i class="bi bi-arrow-counterclockwise me-1"></i> Refund
+      <!-- ✅ TOMBOL KEMBALI -->
+      <a href="{{ route('welcome') }}" class="btn btn-back mt-3 mt-lg-0">
+        <i class="bi bi-house-door me-1"></i> Kembali ke Beranda
       </a>
 
-      <a href="{{ route('welcome') }}" class="btn-back mt-3 mt-lg-0">
-        <i class="bi bi-arrow-left-circle me-1"></i> Kembali
+      <!-- TOMBOL REFUND -->
+      <a href="{{ route('refund.form') }}" class="btn btn-refund mt-3 mt-lg-0">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Refund
       </a>
     </div>
 

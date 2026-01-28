@@ -10,14 +10,17 @@ class LoginTokenMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Token rahasia (ubah sesukamu)
         $secret = config('app.login_secret');
 
-        // Ambil token dari query
+        if ($request->session()->has('login_redirect')) {
+            return $next($request);
+        }
+
         if ($request->query('token') !== $secret) {
-            abort(404); // pura-pura halaman ga ada
+            abort(404);
         }
 
         return $next($request);
     }
+
 }

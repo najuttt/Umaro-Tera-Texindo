@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth; // ✅ TAMBAHKAN
 use App\Models\Guest_carts;
 use App\Models\Guest_carts_item;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Item;
 use App\Models\Category;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -31,7 +33,6 @@ class ProductController extends Controller
                   );
             });
         }
-        $items = $query->paginate(8);
 
         // KATEGORI FILTER
         if ($request->kategori && $request->kategori != 'none') {
@@ -53,48 +54,64 @@ class ProductController extends Controller
 
         $items = $query->paginate(12)->appends($request->all());
 
-        // SESSION HANDLING
-        $sessionId = $request->session()->get('guest_session', Str::uuid());
-        $request->session()->put('guest_session', $sessionId);
-
-        $cart = Guest_carts::with('guestCartItems.item')
-            ->firstOrCreate(['session_id' => $sessionId]);
-
         return view('product.index', [
             'categories' => $categories,
             'items'      => $items,
-            'cartCount'  => $cart->guestCartItems->sum('quantity'),
-            'cartItems'  => $cart->guestCartItems
         ]);
     }
 
     // ==========================
-    // ADD TO CART (AMAN STOK)
+    // ADD TO CART (SUPPORT USER & GUEST)
     // ==========================
     public function addToGuestCart(Request $request)
     {
         $request->validate([
             'item_id'  => 'required|exists:items,id',
-            'quantity' => 'nullable|integer|min:1|max:100'
+            'quantity' => 'nullable|integer|min:1'
         ]);
 
-        $qty = intval($request->quantity ?? 1);
-
+        $qty  = intval($request->quantity ?? 1);
         $item = Item::findOrFail($request->item_id);
 
-        $sessionId = $request->session()->get('guest_session', Str::uuid());
-        $request->session()->put('guest_session', $sessionId);
-
-        $cart = Guest_carts::firstOrCreate(['session_id' => $sessionId]);
+        // ✅ CARI/BUAT CART: USER DULU, BARU SESSION
+        $user = Auth::user();
+        
+        if ($user) {
+            // ✅ JANGAN AMBIL CART YANG UDAH LOCKED!
+            $cart = Guest_carts::where('user_id', $user->id)
+                ->where('is_locked', false)
+                ->first();
+                
+            // ✅ KALAU GA ADA CART AKTIF, BIKIN BARU
+            if (!$cart) {
+                $cart = Guest_carts::create([
+                    'user_id' => $user->id,
+                    'is_locked' => false
+                ]);
+            }
+        } else {
+            $sessionId = session('guest_session_id') ?? session()->getId();
+            
+            // ✅ JANGAN AMBIL CART YANG UDAH LOCKED!
+            $cart = Guest_carts::where('session_id', $sessionId)
+                ->where('is_locked', false)
+                ->first();
+                
+            // ✅ KALAU GA ADA CART AKTIF, BIKIN BARU
+            if (!$cart) {
+                $cart = Guest_carts::create([
+                    'session_id' => $sessionId,
+                    'is_locked' => false
+                ]);
+            }
+        }
 
         $cartItem = $cart->guestCartItems()
             ->where('item_id', $item->id)
             ->first();
 
-        $currentQty = $cartItem ? $cartItem->quantity : 0;
-        $newQty     = $currentQty + $qty;
+        $newQty = ($cartItem->quantity ?? 0) + $qty;
 
-        // 🔐 VALIDASI STOK
         if ($newQty > $item->stock) {
             return response()->json([
                 'success' => false,
@@ -111,24 +128,29 @@ class ProductController extends Controller
             ]);
         }
 
-        $cartItems = $cart->guestCartItems()->with('item')->get();
-
         return response()->json([
-            'success'    => true,
-            'cart_count'=> $cartItems->sum('quantity'),
-            'cart_items'=> $cartItems
+            'success'     => true,
+            'cart_items' => $cart->guestCartItems()->with('item')->get(),
+            'cart_count' => $cart->guestCartItems()->sum('quantity')
         ]);
     }
 
     // ==========================
-    // UPDATE CART (AMAN STOK)
+    // UPDATE CART (SUPPORT USER & GUEST)
     // ==========================
     public function updateGuestCart(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'item_id'  => 'required|exists:items,id',
-            'quantity' => 'required|integer|min:1|max:100'
+            'quantity' => 'required|integer|min:1'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
 
         $item = Item::findOrFail($request->item_id);
 
@@ -139,39 +161,88 @@ class ProductController extends Controller
             ], 422);
         }
 
-        $cart = Guest_carts::where(
-            'session_id',
-            $request->session()->get('guest_session')
-        )->firstOrFail();
-
-        $cart->guestCartItems()
-            ->where('item_id', $item->id)
-            ->update(['quantity' => $request->quantity]);
-
-        return response()->json([
-            'success' => true,
-            'cart_items' => $cart->guestCartItems()->with('item')->get()
-        ]);
-    }
-
-    public function getGuestCart(Request $request)
-    {
-        $sessionId = $request->session()->get('guest_session');
-
-        if (!$sessionId) {
-            return response()->json([
-                'cart_items' => []
-            ]);
+        // ✅ CARI CART: USER ATAU SESSION (JANGAN YANG LOCKED!)
+        $user = Auth::user();
+        
+        if ($user) {
+            $cart = Guest_carts::where('user_id', $user->id)
+                ->where('is_locked', false)
+                ->first();
+        } else {
+            $sessionId = session('guest_session_id') ?? session()->getId();
+            $cart = Guest_carts::where('session_id', $sessionId)
+                ->where('is_locked', false)
+                ->first();
         }
-
-        $cart = Guest_carts::with('guestCartItems.item')
-            ->where('session_id', $sessionId)
-            ->first();
 
         if (!$cart) {
             return response()->json([
-                'cart_items' => []
-            ]);
+                'success' => false,
+                'message' => 'Keranjang tidak ditemukan'
+            ], 404);
+        }
+
+        $cartItem = $cart->guestCartItems()
+            ->where('item_id', $item->id)
+            ->first();
+
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item tidak ada di keranjang'
+            ], 404);
+        }
+
+        $cartItem->update([
+            'quantity' => $request->quantity
+        ]);
+
+        return response()->json([
+            'success'     => true,
+            'cart_items' => $cart->guestCartItems()->with('item')->get(),
+            'cart_count' => $cart->guestCartItems()->sum('quantity')
+        ]);
+    }
+
+    // ✅ HAPUS METHOD getGuestSession() KARENA UDAH GA DIPAKE
+
+    // ==========================
+    // GET CART (SUPPORT USER & GUEST)
+    // ==========================
+    public function getGuestCart(Request $request)
+    {
+        $user = Auth::user();
+        
+        if ($user) {
+            // ✅ JANGAN AMBIL CART YANG UDAH LOCKED!
+            $cart = Guest_carts::with('guestCartItems.item')
+                ->where('user_id', $user->id)
+                ->where('is_locked', false)
+                ->first();
+                
+            // ✅ KALAU GA ADA CART AKTIF, BIKIN BARU
+            if (!$cart) {
+                $cart = Guest_carts::create([
+                    'user_id' => $user->id,
+                    'is_locked' => false
+                ]);
+            }
+        } else {
+            $sessionId = session('guest_session_id') ?? session()->getId();
+            
+            // ✅ JANGAN AMBIL CART YANG UDAH LOCKED!
+            $cart = Guest_carts::with('guestCartItems.item')
+                ->where('session_id', $sessionId)
+                ->where('is_locked', false)
+                ->first();
+                
+            // ✅ KALAU GA ADA CART AKTIF, BIKIN BARU
+            if (!$cart) {
+                $cart = Guest_carts::create([
+                    'session_id' => $sessionId,
+                    'is_locked' => false
+                ]);
+            }
         }
 
         return response()->json([
@@ -187,7 +258,7 @@ class ProductController extends Controller
     }
 
     // ==========================
-    // DELETE CART ITEM
+    // DELETE CART ITEM (SUPPORT USER & GUEST)
     // ==========================
     public function deleteGuestCart(Request $request)
     {
@@ -195,47 +266,93 @@ class ProductController extends Controller
             'item_id' => 'required|exists:items,id'
         ]);
 
-        $cart = Guest_carts::where(
-            'session_id',
-            $request->session()->get('guest_session')
-        )->firstOrFail();
+        $user = Auth::user();
+        
+        if ($user) {
+            $cart = Guest_carts::where('user_id', $user->id)
+                ->where('is_locked', false)
+                ->first();
+        } else {
+            $sessionId = session('guest_session_id') ?? session()->getId();
+            $cart = Guest_carts::where('session_id', $sessionId)
+                ->where('is_locked', false)
+                ->first();
+        }
+
+        if (!$cart) {
+            return response()->json([
+                'success' => true,
+                'cart_items' => []
+            ]);
+        }
 
         $cart->guestCartItems()
             ->where('item_id', $request->item_id)
             ->delete();
 
         return response()->json([
-            'success' => true,
-            'cart_items' => $cart->guestCartItems()->with('item')->get()
+            'success'     => true,
+            'cart_items' => $cart->guestCartItems()->with('item')->get(),
+            'cart_count' => $cart->guestCartItems()->sum('quantity')
         ]);
     }
 
     // ==========================
-    // **CHECKOUT PAGE (MENAMPILKAN HALAMAN CHECKOUT)**
+    // CHECKOUT PAGE (SUPPORT USER & GUEST)
     // ==========================
-    public function checkoutPage(Request $request)
-    {
-        $sessionId = $request->session()->get('guest_session');
-
+public function checkoutPage(Request $request)
+{
+    $user = Auth::user();
+    
+    logger()->info('🔍 Checkout Page - User:', ['user_id' => $user?->id, 'name' => $user?->name]);
+    logger()->info('🔍 Session ID:', ['guest_session_id' => session('guest_session_id'), 'session_id' => session()->getId()]);
+    
+    if ($user) {
+        // ✅ JANGAN AMBIL CART YANG UDAH LOCKED!
+        $cart = Guest_carts::with('guestCartItems.item')
+            ->where('user_id', $user->id)
+            ->where('is_locked', false)
+            ->first();
+    } else {
+        $sessionId = session('guest_session_id') ?? session()->getId();
+        
+        // ✅ JANGAN AMBIL CART YANG UDAH LOCKED!
         $cart = Guest_carts::with('guestCartItems.item')
             ->where('session_id', $sessionId)
+            ->where('is_locked', false)
             ->first();
-
-        if (!$cart || $cart->guestCartItems->isEmpty()) {
-            return redirect()->route('produk')->with('error', 'Keranjang kosong');
-        }
-
-        $totalHarga = $cart->guestCartItems->sum(function ($i) {
-        return $i->item->price * $i->quantity;
-        });
-
-        return view('checkout.index', [
-            'cart' => $cart,
-            'totalHarga' => $totalHarga
-        ]);
     }
 
-   public function sendWhatsApp(Request $request)
+    logger()->info('🔍 Cart Found:', [
+        'cart_id' => $cart?->id,
+        'items_count' => $cart?->guestCartItems->count() ?? 0,
+        'is_locked' => $cart?->is_locked ?? 'null'
+    ]);
+
+    if (!$cart || $cart->guestCartItems->isEmpty()) {
+        logger()->warning('❌ Cart kosong atau tidak ditemukan! Redirect ke produk');
+        return redirect()->route('produk')->with('error', 'Keranjang kosong');
+    }
+
+    if ($cart->is_locked) {
+        logger()->warning('❌ Cart sudah di-lock! Redirect ke produk');
+        return redirect()->route('produk')->with('error', 'Cart sudah diproses, silakan buat order baru');
+    }
+
+    $totalHarga = $cart->guestCartItems->sum(function ($i) {
+        return $i->item->price * $i->quantity;
+    });
+
+    logger()->info('✅ Checkout Page Success', ['total' => $totalHarga]);
+
+    session()->flash('success', 'Cart ditemukan! Total items: ' . $cart->guestCartItems->count());
+
+    return view('checkout.index', [
+        'cart' => $cart,
+        'totalHarga' => $totalHarga
+    ]);
+}
+    public function sendWhatsApp(Request $request)
     {
         $orderId   = session('last_order_id');
         $orderCode = session('last_order_code');
@@ -285,64 +402,84 @@ class ProductController extends Controller
     }
 
     // ==========================
-    // **CHECKOUT PROCESS**
+    // CHECKOUT PROCESS (SUPPORT USER & GUEST)
     // ==========================
     public function checkoutGuestCart(Request $request)
     {
-        $sessionId = $request->session()->get('guest_session');
-
-        $guestCart = Guest_carts::with('guestCartItems.item')
-            ->where('session_id', $sessionId)
-            ->first();
-
-        if (!$guestCart || $guestCart->guestCartItems->isEmpty()) {
-            return redirect()->route('produk')->with('error', 'Keranjang kosong');
+        $user = Auth::user();
+        
+        if ($user) {
+            $guestCart = Guest_carts::with('guestCartItems.item')
+                ->where('user_id', $user->id)
+                ->where('is_locked', false)
+                ->first();
+        } else {
+            $sessionId = session('guest_session_id') ?? session()->getId();
+            $guestCart = Guest_carts::with('guestCartItems.item')
+                ->where('session_id', $sessionId)
+                ->where('is_locked', false)
+                ->first();
         }
 
-        // VALIDASI
+        if (!$guestCart || $guestCart->guestCartItems->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Keranjang kosong'
+            ], 400);
+        }
+
         $request->validate([
             'customer_name'    => 'required|string|max:255',
             'customer_phone'   => 'required|string|max:20',
             'customer_address' => 'required|string|max:500',
         ]);
 
-        DB::transaction(function () use ($guestCart, $request) {
+        DB::transaction(function () use ($guestCart, $request, $user) {
 
-        $order = Order::create([
-            'order_code'       => Order::generateOrderCode(),
-            'customer_name'    => $request->customer_name,
-            'customer_phone'   => $request->customer_phone,
-            'customer_address' => $request->customer_address,
-            'status'           => 'pending'
-        ]);
+            $totalHarga = $guestCart->guestCartItems->sum(function ($i) {
+                return $i->item->price * $i->quantity;
+            });
 
-        foreach ($guestCart->guestCartItems as $cartItem) {
-            $item = Item::lockForUpdate()->find($cartItem->item_id);
+            $order = Order::create([
+                'order_code'       => Order::generateOrderCode(),
+                'user_id'          => $user ? $user->id : null,
+                'customer_name'    => $request->customer_name,
+                'customer_phone'   => $request->customer_phone,
+                'customer_address' => $request->customer_address,
+                'total_price'      => $totalHarga,
+                'status'           => 'pending',
+                'payment_method'   => 'whatsapp',
+                'payment_reference'=> null
+            ]);
 
-            if ($cartItem->quantity > $item->stock) {
-                throw new \Exception("Stok {$item->name} tidak cukup.");
+            foreach ($guestCart->guestCartItems as $cartItem) {
+                $item = Item::lockForUpdate()->find($cartItem->item_id);
+
+                if ($cartItem->quantity > $item->stock) {
+                    throw new \Exception("Stok {$item->name} tidak cukup");
+                }
+
+                $item->decrement('stock', $cartItem->quantity);
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'item_id'  => $item->id,
+                    'quantity' => $cartItem->quantity
+                ]);
             }
 
-            $item->decrement('stock', $cartItem->quantity);
-
-            OrderItem::create([
-                'order_id' => $order->id,
-                'item_id'  => $item->id,
-                'quantity' => $cartItem->quantity
+            session([
+                'last_order_id'   => $order->id,
+                'last_order_code' => $order->order_code,
             ]);
-        }
 
-        // 🔥 SIMPAN KE SESSION
-        session([
-            'last_order_id'   => $order->id,
-            'last_order_code' => $order->order_code,
-        ]);
-
-        // HAPUS CART
-        $guestCart->guestCartItems()->delete();
+            $guestCart->guestCartItems()->delete();
+            $guestCart->update(['is_locked' => true]);
+            
+            // ✅ GA USAH REGENERATE SESSION!
+            // Cart baru otomatis dibuat pas add to cart lagi
         });
 
-        return redirect()->route('produk')->with('success', 'Pesanan baru menunggu approval');
+        return response()->json(['success' => true]);
     }
-
 }

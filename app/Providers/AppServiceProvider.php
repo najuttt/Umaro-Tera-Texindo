@@ -12,6 +12,10 @@ use Illuminate\Support\ServiceProvider;
 use App\Repositories\Contracts\AdminRepositoryInterface;
 use App\Repositories\Eloquent\AdminRepository;
 
+// ⬇️ TAMBAHAN INI
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\GoogleProvider;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -29,17 +33,30 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ========================
+        // VIEW COMPOSER (PUNYA LO)
+        // ========================
         View::composer('*', function ($view) {
             if (Auth::check()) {
                 $carts = Cart::where('user_id', Auth::id())->first();
-                if(! $carts){
-                    return null;
-                } else {
-                    $view->with('cartsitems', $carts);
-                    $cartsitem = CartItem::where('cart_id', $carts->id)->latest()->get();
+                if (! $carts) {
+                    return;
                 }
+
+                $view->with('cartsitems', $carts);
             }
         });
 
+        // ========================
+        // 🔥 FIX SOCIALITE GOOGLE
+        // ========================
+        Socialite::extend('google', function ($app) {
+            $config = $app['config']['services.google'];
+
+            return Socialite::buildProvider(
+                GoogleProvider::class,
+                $config
+            )->stateless(); // ← INI KUNCI NYA
+        });
     }
 }

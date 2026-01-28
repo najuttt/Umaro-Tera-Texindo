@@ -12,7 +12,7 @@ use App\Models\User;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Tampilkan halaman login.
+     * Tampilkan halaman login (guest / user biasa)
      */
     public function create()
     {
@@ -20,12 +20,12 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Tangani login (support AJAX tanpa reload).
+     * Tangani login (support AJAX tanpa reload)
      */
     public function store(LoginRequest $request)
     {
-        // 🧩 Cek apakah akun ada
         $user = User::where('email', $request->email)->first();
+
         if (!$user) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -38,13 +38,12 @@ class AuthenticatedSessionController extends Controller
         }
 
         try {
-            // 🔑 Proses login standar
             $request->authenticate();
             $request->session()->regenerate();
 
-            // 🚫 Cek banned
             if ($user->is_banned) {
                 Auth::logout();
+
                 if ($request->expectsJson()) {
                     return response()->json([
                         'success' => false,
@@ -52,18 +51,18 @@ class AuthenticatedSessionController extends Controller
                         'message' => 'Akun kamu sedang diban. Hubungi admin.',
                     ], 403);
                 }
+
                 return redirect()->route('login')->with('error', 'Akun kamu sedang diban. Hubungi admin.');
             }
 
-            // 🧭 Tentukan dashboard berdasarkan role
+            // Tentukan redirect berdasarkan role
             $redirect = match ($user->role) {
                 'super_admin' => route('super_admin.dashboard'),
                 'admin'       => route('admin.dashboard'),
                 'pegawai'     => route('pegawai.dashboard'),
-                default       => route('dashboard'),
+                default       => route('checkout.page'),
             };
 
-            // ✅ Pastikan session tersimpan
             if (!Auth::check()) {
                 return response()->json([
                     'success' => false,
@@ -72,7 +71,6 @@ class AuthenticatedSessionController extends Controller
                 ], 401);
             }
 
-            // 🚀 Respon AJAX
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
@@ -82,11 +80,9 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
-            // 🌐 Respon normal (non-AJAX)
             return redirect()->intended($redirect);
 
         } catch (ValidationException $e) {
-            // ❌ Password salah
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -94,24 +90,29 @@ class AuthenticatedSessionController extends Controller
                     'message' => 'Kata sandi salah. Silakan coba lagi.',
                 ], 422);
             }
-
             throw $e;
         }
     }
 
     /**
-     * Logout dan hapus session.
+     * Logout user
      */
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
+        $fromCheckout = $request->headers->get('referer') &&
+            str_contains($request->headers->get('referer'), '/checkout');
+
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true]);
+        // 🔥 LOGOUT DARI CHECKOUT → BALIK KE CHECKOUT
+        if ($fromCheckout) {
+            return redirect()->route('checkout.page');
         }
 
-        return redirect('/');
+        // 🔐 SELAIN ITU (ADMIN AREA)
+        return redirect()->route('login');
     }
+
 }

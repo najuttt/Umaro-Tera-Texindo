@@ -1,4 +1,16 @@
 @extends('layouts.product')
+@if(session('error'))
+<script>
+    alert('❌ ERROR: {{ session('error') }}');
+</script>
+@endif
+
+@if(session('success'))
+<script>
+    alert('✅ SUCCESS: {{ session('success') }}');
+</script>
+@endif
+
 
 @section('content')
 
@@ -325,11 +337,13 @@ body{
         <span id="cart-total">Rp 0</span>
     </div>
 
-    <a href="{{ route('checkout.page') }}"
-       id="btn-checkout"
-       class="btn btn-warning w-100 fw-semibold disabled">
+    <button 
+        id="btn-checkout"
+        type="button"
+        class="btn btn-warning w-100 fw-semibold"
+        disabled>
         Checkout
-    </a>
+    </button>
 </div>
 
 @endsection
@@ -337,11 +351,26 @@ body{
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
+    console.log('🚀 Script loaded');
 
     const grid = document.getElementById('product-grid');
     const search = document.getElementById('search');
     const kategori = document.getElementById('kategori');
     const sort = document.getElementById('sort');
+    const checkoutBtn = document.getElementById('btn-checkout');
+
+    /* ================= CHECKOUT HANDLER (ATTACH SEKALI AJA!) ================= */
+    checkoutBtn.addEventListener('click', function(e) {
+        console.log('🛒 Checkout button clicked!');
+        
+        if (this.disabled) {
+            console.log('⚠️ Button is disabled');
+            return;
+        }
+        
+        console.log('🚀 Redirecting to checkout page...');
+        window.location.href = "{{ route('checkout.page') }}";
+    });
 
     /* ================= FILTER AJAX ================= */
     function fetchProducts(){
@@ -366,13 +395,32 @@ document.addEventListener('DOMContentLoaded',()=>{
         el.addEventListener('input',fetchProducts);
     });
 
-    /* ================= LOAD CART (SINGLE SOURCE OF TRUTH) ================= */
+    /* ================= LOAD CART ================= */
     function loadCart(){
+        console.log('🔄 Loading cart...');
+        
         fetch("{{ route('cart.get') }}",{
+            credentials:'same-origin',
             headers:{'X-Requested-With':'XMLHttpRequest'}
         })
-        .then(r=>r.json())
-        .then(d=>refreshCart(d.cart_items));
+        .then(r=>{
+            if(!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(d=>{
+            console.log('📦 Cart data:', d);
+            
+            // ✅ FORCE DISABLE KALAU CART KOSONG TAPI BUTTON ENABLED
+            if ((!d.cart_items || d.cart_items.length === 0) && !checkoutBtn.disabled) {
+                console.log('⚠️ Cart kosong tapi button enabled, forcing disable...');
+            }
+            
+            refreshCart(d.cart_items);
+        })
+        .catch(err=>{
+            console.error('❌ Error loading cart:', err);
+            refreshCart([]); // Force cart kosong kalau error
+        });
     }
 
     /* ================= ADD TO CART ================= */
@@ -384,13 +432,24 @@ document.addEventListener('DOMContentLoaded',()=>{
 
                 fetch("{{ route('produk.add_to_guest_cart') }}",{
                     method:'POST',
+                    credentials:'same-origin',
                     headers:{
                         'X-CSRF-TOKEN':"{{ csrf_token() }}",
                         'Content-Type':'application/json'
                     },
                     body:JSON.stringify({item_id:id,quantity:qty})
                 })
-                .then(()=>loadCart()); // ⬅️ WAJIB
+                .then(async res=>{
+                    const data = await res.json();
+
+                    if(!res.ok){
+                        alert(data.message || 'Terjadi kesalahan');
+                        return;
+                    }
+
+                    console.log('✅ Item added, reloading cart...');
+                    loadCart();
+                });
             };
         });
     }
@@ -401,44 +460,64 @@ document.addEventListener('DOMContentLoaded',()=>{
 
         fetch("{{ route('cart.update') }}",{
             method:'POST',
+            credentials:'same-origin',
             headers:{
                 'X-CSRF-TOKEN':"{{ csrf_token() }}",
                 'Content-Type':'application/json'
             },
             body:JSON.stringify({item_id:id,quantity:qty})
         })
-        .then(()=>loadCart()); // ⬅️ WAJIB
+        .then(async res=>{
+            const data = await res.json();
+
+            if(!res.ok){
+                alert(data.message || 'Jumlah melebihi stok');
+                return;
+            }
+
+            console.log('✅ Qty updated, reloading cart...');
+            loadCart();
+        });
     };
 
     /* ================= DELETE ITEM ================= */
     window.deleteItem = id =>{
         fetch("{{ route('cart.delete') }}",{
             method:'POST',
+            credentials:'same-origin',
             headers:{
                 'X-CSRF-TOKEN':"{{ csrf_token() }}",
                 'Content-Type':'application/json'
             },
             body:JSON.stringify({item_id:id})
         })
-        .then(()=>loadCart()); // ⬅️ WAJIB
+        .then(()=>{
+            console.log('✅ Item deleted, reloading cart...');
+            loadCart();
+        });
     };
 
-    /* ================= RENDER CART ================= */
+    /* ================= RENDER CART (GA ATTACH EVENT LAGI!) ================= */
     function refreshCart(items){
+        console.log('🎨 Rendering cart with', items?.length || 0, 'items');
+        
         const list = document.getElementById('cart-items');
         const count = document.getElementById('cart-count');
         const totalEl = document.getElementById('cart-total');
-        const checkout = document.getElementById('btn-checkout');
 
         list.innerHTML = '';
         let totalQty = 0;
         let totalHarga = 0;
 
         if(!items || items.length === 0){
+            console.log('📭 Cart empty');
             list.innerHTML = '<li class="text-muted small">Keranjang kosong</li>';
             count.textContent = 0;
             totalEl.textContent = 'Rp 0';
-            checkout.classList.add('disabled');
+            
+            // DISABLE SAJA, JANGAN HAPUS EVENT LISTENER
+            checkoutBtn.disabled = true;
+            console.log('🔒 Checkout DISABLED');
             return;
         }
 
@@ -472,13 +551,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 
         count.textContent = totalQty;
         totalEl.textContent = 'Rp ' + totalHarga.toLocaleString('id-ID');
-        checkout.classList.remove('disabled');
+        
+        // ENABLE SAJA, EVENT LISTENER UDAH DI-ATTACH DI ATAS
+        checkoutBtn.disabled = false;
+        console.log('✅ Checkout ENABLED');
     }
 
     /* ================= INIT ================= */
     bindAddToCart();
-    loadCart(); // ⬅️ INIT PERTAMA
+    loadCart();
+    console.log('✅ Initialization complete');
 });
 </script>
-
 @endsection
