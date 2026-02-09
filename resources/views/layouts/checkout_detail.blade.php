@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Checkout – UMARO</title>
+<title>Checkout History – UMARO</title>
 
 <!-- 🧩 Favicon -->
 <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/icons/logo1.jpeg') }}" />
@@ -173,54 +173,9 @@ body {
         <div class="collapse navbar-collapse justify-content-end gap-3" id="navbarProduct">
 
             <!-- 🔙 Tombol Kembali -->
-            <a href="{{ route('produk') }}" class="btn-back mt-3 mt-lg-0">
+            <a href="{{ route('checkout.page') }}" class="btn-back mt-3 mt-lg-0">
                 <i class="bi bi-arrow-left-circle me-1"></i> Kembali
             </a>
-
-            <!-- 👤 Google Avatar + Logout -->
-            @auth
-            <div class="dropdown">
-                <a href="#" data-bs-toggle="dropdown" class="d-flex align-items-center">
-
-                    @if(Auth::user()->google_avatar)
-                        <img 
-                            src="{{ Auth::user()->google_avatar }}"
-                            class="rounded-circle avatar-navbar"
-                            width="40" height="40"
-                            alt="Avatar">
-                    @else
-                        <div
-                            class="rounded-circle d-flex align-items-center justify-content-center avatar-navbar"
-                            style="
-                                width:40px;
-                                height:40px;
-                                background:linear-gradient(135deg,#d4af37,#f1e5ac);
-                                font-weight:800;
-                                color:#000;
-                            ">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </div>
-                    @endif
-
-                </a>
-
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="dropdown-item">
-                                <i class="ri-logout-box-line me-1"></i> Logout
-                            </button>
-                        </form>
-                    </li>
-                    <li>
-                        <a href="{{ route('order.history') }}" class="dropdown-item">
-                            <i class="ri-history-line me-1"></i> Order History
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endauth
 
         </div>
 

@@ -106,7 +106,7 @@
 
     <div class="map-container shadow rounded-4 overflow-hidden mx-auto" style="max-width: 900px;">
       <iframe
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.962437417771!2d107.59425387499323!3d-6.895909993098043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68e63ec3b486df%3A0x485a589d63cf53a5!2sJl.%20Pasteur%20No.31%2C%20Pasir%20Kaliki%2C%20Kec.%20Cicendo%2C%20Kota%20Bandung!5e0!3m2!1sid!2sid!4v1731305900000!5m2!1sid!2sid"
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.6537789697447!2d107.52452151477454!3d-6.948615069308676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68ef1970f910ad%3A0xd4a461195253f1d1!2sMarketing%20office%20Parahyangan%20Gallery!5e0!3m2!1sid!2sid!4v1234567890123!5m2!1sid!2sid"
         width="100%" height="360" style="border:0;" allowfullscreen="" loading="lazy"
         referrerpolicy="no-referrer-when-downgrade">
       </iframe>

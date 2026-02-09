@@ -1,12 +1,14 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'order_code',
         'user_id',
@@ -18,6 +20,8 @@ class Order extends Model
         'payment_method',
         'payment_reference'
     ];
+
+    protected $dates = ['deleted_at'];
 
     public function orderItems()
     {
@@ -38,7 +42,7 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function getTotalQtyAttribute()
     {
         return $this->items->sum('quantity');
@@ -59,7 +63,6 @@ class Order extends Model
     public static function generateOrderCode()
     {
         $date = now()->format('Ymd');
-
         $lastOrder = self::whereDate('created_at', now()->toDateString())
             ->latest('id')
             ->first();

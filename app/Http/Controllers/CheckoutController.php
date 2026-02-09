@@ -1,8 +1,8 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderItem; 
 use App\Models\Guest_carts;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -14,19 +14,23 @@ class CheckoutController extends Controller
 {
     public function pay(Request $request)
     {
+        // ✅ VALIDASI DATA CUSTOMER DARI FORM
+        $request->validate([
+            'customer_name'    => 'required|string|max:255',
+            'customer_phone'   => 'required|string|max:20',
+            'customer_address' => 'required|string|max:500',
+        ]);
+
         $user = Auth::user();
 
         if (!$user) {
             return response()->json(['message' => 'Login terlebih dahulu'], 401);
         }
 
-        // ✅ CARI CART BY USER ATAU SESSION
-        $cart = Guest_carts::where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('session_id', session('guest_session_id') ?? session()->getId());
-            })
+        // Ambil cart
+        $cart = Guest_carts::with('guestCartItems.item')
+            ->where('user_id', $user->id)
             ->where('is_locked', false)
-            ->with('guestCartItems.item')
             ->first();
 
         if (!$cart || $cart->guestCartItems->isEmpty()) {
@@ -49,26 +53,29 @@ class CheckoutController extends Controller
         Config::$is3ds         = true;
 
         DB::beginTransaction();
+
         try {
             // ORDER CODE AMAN (ANTI DUPLIKAT)
             $orderCode = 'ORD-' . now()->format('YmdHis') . '-' . rand(1000, 9999);
 
+            // ✅ SIMPAN DATA CUSTOMER DARI FORM (BUKAN DARI USER PROFILE)
             $order = Order::create([
                 'order_code'       => $orderCode,
                 'user_id'          => $user->id,
-                'customer_name'    => $user->name,
-                'customer_phone'   => $user->phone ?? '-',        
-                'customer_address' => $user->address ?? '-',      
+                'customer_name'    => $request->customer_name,
+                'customer_phone'   => $request->customer_phone,
+                'customer_address' => $request->customer_address,
                 'total_price'      => $total,
                 'status'           => 'pending',
                 'payment_method'   => 'midtrans',
             ]);
 
-            foreach ($cart->guestCartItems as $item) {
-                $order->items()->create([
-                    'item_id'  => $item->item_id,
-                    'quantity' => $item->quantity,
-                    'price'    => $item->item->price
+            // ✅ SIMPAN ORDER ITEMS
+            foreach ($cart->guestCartItems as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'item_id'  => $cartItem->item_id,
+                    'quantity' => $cartItem->quantity,
                 ]);
             }
 
@@ -79,18 +86,28 @@ class CheckoutController extends Controller
                     'gross_amount'  => (int) $order->total_price,
                 ],
                 'customer_details' => [
-                    'first_name' => $user->name ?? 'User',
+                    'first_name' => $request->customer_name,
                     'email'      => $user->email,
+                    'phone'      => $request->customer_phone,
                 ],
             ]);
 
-            // KUNCI CART BIAR GA DOBEL ORDER
+            // ✅ LOCK CART & HAPUS ITEMS
+            $cart->guestCartItems()->delete();
             $cart->update(['is_locked' => true]);
+
+            // ✅ SIMPAN ORDER ID KE SESSION (UNTUK TRACKING)
+            session([
+                'last_order_id'   => $order->id,
+                'last_order_code' => $order->order_code,
+            ]);
 
             DB::commit();
 
+            // ✅ RETURN SNAP TOKEN + REDIRECT URL
             return response()->json([
-                'snap_token' => $snapToken
+                'snap_token'   => $snapToken,
+                'redirect_url' => route('order.history') 
             ]);
 
         } catch (\Exception $e) {

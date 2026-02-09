@@ -23,6 +23,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\MidtransCallbackController;
+use App\Http\Controllers\OrderHistoryController;
 use Illuminate\Support\Facades\Log;
 
 // Role Controllers
@@ -470,6 +471,18 @@ Route::middleware('web')->group(function() {
         ->middleware('auth')
         ->name('checkout.pay');
 });
+
+Route::middleware('auth')->group(function () {
+    Route::get('/order-history', [OrderHistoryController::class, 'index'])
+        ->name('order.history');
+    
+    Route::get('/order-history/{id}/refund-wa', [OrderHistoryController::class, 'getRefundWhatsAppUrl'])
+        ->name('order.refund.wa');
+
+    Route::post('/order-history/{id}/cancel', [OrderHistoryController::class, 'cancelOrder'])
+        ->name('order.cancel');
+});
+
 
 // Google Auth
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])
