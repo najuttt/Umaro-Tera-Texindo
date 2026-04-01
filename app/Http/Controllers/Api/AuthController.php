@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Guest_carts;
 
 class AuthController extends Controller
 {
@@ -44,6 +45,48 @@ class AuthController extends Controller
 
         // 🔑 generate token Sanctum
         $token = $user->createToken('mobile-token')->plainTextToken;
+
+        /**
+         * 🔥 MERGE CART (IMPORTANT)
+         */
+        $deviceId = $request->header('device_id');
+
+        if ($deviceId) {
+
+            // 🛒 ambil guest cart
+            $guestCart = Guest_carts::with('guestCartItems')
+                ->where('device_id', $deviceId)
+                ->where('is_locked', false)
+                ->first();
+
+            if ($guestCart) {
+
+                // 🛒 ambil / buat cart user
+                $userCart = Guest_carts::firstOrCreate([
+                    'user_id' => $user->id,
+                    'is_locked' => false
+                ]);
+
+                foreach ($guestCart->guestCartItems as $item) {
+
+                    $existing = $userCart->guestCartItems()
+                        ->where('item_id', $item->item_id)
+                        ->first();
+
+                    if ($existing) {
+                        $existing->increment('quantity', $item->quantity);
+                    } else {
+                        $userCart->guestCartItems()->create([
+                            'item_id'  => $item->item_id,
+                            'quantity' => $item->quantity,
+                        ]);
+                    }
+                }
+
+                // ❌ hapus guest cart setelah merge
+                $guestCart->delete();
+            }
+        }
 
         return response()->json([
             'success' => true,

@@ -12,12 +12,7 @@ class WellcomeController extends Controller
         // Hitung total pengunjung (selain admin & super_admin)
         $totalPengunjung = User::whereNotIn('role', ['admin', 'super_admin'])->count();
 
-        // Hitung jumlah pegawai aktif (yang tidak dibanned)
-        $pegawaiAktif = User::where('role', 'pegawai')
-            ->where('is_banned', false)
-            ->count();
-
         // Kirim data ke view utama
-        return view('welcome', compact('totalPengunjung', 'pegawaiAktif'));
+        return view('welcome', compact('totalPengunjung'));
     }
 }

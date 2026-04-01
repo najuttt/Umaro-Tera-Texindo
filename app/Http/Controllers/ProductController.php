@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth; // ✅ TAMBAHKAN
+use Illuminate\Support\Facades\Auth; 
 use App\Models\Guest_carts;
 use App\Models\Guest_carts_item;
 use App\Models\Order;
