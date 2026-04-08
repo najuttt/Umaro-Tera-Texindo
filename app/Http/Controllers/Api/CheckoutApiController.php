@@ -14,11 +14,13 @@ use Midtrans\Snap;
 
 class CheckoutApiController extends Controller
 {
+    // 🔥 DEVICE ID
     private function getDeviceId(Request $request)
     {
         return $request->header('device_id') ?? $request->ip();
     }
 
+    // 🔥 GET CART
     private function getCart(Request $request)
     {
         if (Auth::check()) {
@@ -34,13 +36,15 @@ class CheckoutApiController extends Controller
         }
     }
 
-    // 💳 MIDTRANS (WAJIB LOGIN)
+    // =========================================================
+    // 💳 MIDTRANS (LOGIN WAJIB)
+    // =========================================================
     public function midtrans(Request $request)
     {
         if (!Auth::check()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Harus login dulu untuk pembayaran'
+                'message' => 'Harus login dulu'
             ], 401);
         }
 
@@ -50,7 +54,6 @@ class CheckoutApiController extends Controller
             'customer_address' => 'required|string|max:500',
         ]);
 
-        $user = Auth::user();
         $cart = $this->getCart($request);
 
         if (!$cart || $cart->guestCartItems->isEmpty()) {
@@ -64,6 +67,7 @@ class CheckoutApiController extends Controller
             fn($i) => (int)$i->item->price * $i->quantity
         );
 
+        // 🔥 MIDTRANS CONFIG
         Config::$serverKey    = config('services.midtrans.server_key');
         Config::$isProduction = config('services.midtrans.is_production');
         Config::$isSanitized  = true;
@@ -73,9 +77,10 @@ class CheckoutApiController extends Controller
 
         try {
 
+            // 🔥 CREATE ORDER
             $order = Order::create([
                 'order_code'       => Order::generateOrderCode(),
-                'user_id'          => $user->id,
+                'user_id'          => Auth::id(),
                 'customer_name'    => $request->customer_name,
                 'customer_phone'   => $request->customer_phone,
                 'customer_address' => $request->customer_address,
@@ -84,6 +89,7 @@ class CheckoutApiController extends Controller
                 'payment_method'   => 'midtrans',
             ]);
 
+            // 🔥 SAVE ITEMS
             foreach ($cart->guestCartItems as $cartItem) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -92,13 +98,35 @@ class CheckoutApiController extends Controller
                 ]);
             }
 
+            // 🔥 MIDTRANS ITEM DETAIL
+            $itemDetails = $cart->guestCartItems->map(function ($item) {
+                return [
+                    'id'       => $item->item->id,
+                    'price'    => (int) $item->item->price,
+                    'quantity' => $item->quantity,
+                    'name'     => $item->item->name,
+                ];
+            })->toArray();
+
+            // 🔥 SNAP TOKEN
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
                     'order_id'     => $order->order_code,
                     'gross_amount' => (int) $total,
                 ],
+                'customer_details' => [
+                    'first_name' => $request->customer_name,
+                    'phone'      => $request->customer_phone,
+                ],
+                'item_details' => $itemDetails,
             ]);
 
+            // 🔥 SAVE PAYMENT REF
+            $order->update([
+                'payment_reference' => $snapToken
+            ]);
+
+            // 🔥 CLEAR CART
             $cart->guestCartItems()->delete();
             $cart->update(['is_locked' => true]);
 
@@ -122,13 +150,15 @@ class CheckoutApiController extends Controller
         }
     }
 
-    // 📱 WHATSAPP (TANPA LOGIN)
+    // =========================================================
+    // 📱 WHATSAPP (GUEST & LOGIN)
+    // =========================================================
     public function whatsapp(Request $request)
     {
         $request->validate([
-            'customer_name'    => 'required',
-            'customer_phone'   => 'required',
-            'customer_address' => 'required',
+            'customer_name'    => 'nullable|string|max:255',
+            'customer_phone'   => 'nullable|string|max:20',
+            'customer_address' => 'nullable|string|max:500',
         ]);
 
         $cart = $this->getCart($request);
@@ -150,14 +180,16 @@ class CheckoutApiController extends Controller
 
             $order = Order::create([
                 'order_code'       => Order::generateOrderCode(),
-                'user_id'          => Auth::id(), // bisa null
-                'customer_name'    => $request->customer_name,
-                'customer_phone'   => $request->customer_phone,
-                'customer_address' => $request->customer_address,
+                'user_id'          => Auth::id(),
+                'customer_name'    => $request->customer_name ?? 'Guest',
+                'customer_phone'   => $request->customer_phone ?? '-',
+                'customer_address' => $request->customer_address ?? '-',
                 'total_price'      => $total,
                 'status'           => 'pending',
                 'payment_method'   => 'whatsapp',
             ]);
+
+            $messageItems = "";
 
             foreach ($cart->guestCartItems as $cartItem) {
                 OrderItem::create([
@@ -165,8 +197,19 @@ class CheckoutApiController extends Controller
                     'item_id'  => $cartItem->item_id,
                     'quantity' => $cartItem->quantity,
                 ]);
+
+                $messageItems .= "- {$cartItem->item->name} x{$cartItem->quantity}\n";
             }
 
+            // 🔥 FORMAT WA
+            $message = "Halo, saya mau order:\n\n";
+            $message .= $messageItems;
+            $message .= "\nTotal: Rp " . number_format($total, 0, ',', '.');
+            $message .= "\nKode Order: {$order->order_code}";
+
+            $waUrl = "https://wa.me/6282128366815?text=" . urlencode($message);
+
+            // 🔥 CLEAR CART
             $cart->guestCartItems()->delete();
             $cart->update(['is_locked' => true]);
 
@@ -174,8 +217,8 @@ class CheckoutApiController extends Controller
 
             return response()->json([
                 'success'    => true,
-                'order_code' => $order->order_code,
-                'wa_url'     => "https://wa.me/6282128366815?text=Order%20{$order->order_code}"
+                'url'        => $waUrl,
+                'order_code' => $order->order_code
             ]);
 
         } catch (\Exception $e) {
@@ -183,7 +226,8 @@ class CheckoutApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Checkout gagal'
+                'message' => 'Checkout gagal',
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Guest_carts;
 use App\Models\Guest_carts_item;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class CartApiController extends Controller
 {
@@ -16,7 +17,7 @@ class CartApiController extends Controller
         return $request->header('device_id') ?? $request->ip();
     }
 
-    // 🔥 ambil cart (SMART)
+    // 🔥 ambil cart (SMART: guest + login)
     private function getCart(Request $request)
     {
         if (Auth::check()) {
@@ -33,7 +34,7 @@ class CartApiController extends Controller
     }
 
     /**
-     * GET CART
+     * 🛒 GET CART
      */
     public function index(Request $request)
     {
@@ -61,14 +62,22 @@ class CartApiController extends Controller
     }
 
     /**
-     * ADD CART
+     * ➕ ADD TO CART (ANTI HTML ERROR)
      */
     public function add(Request $request)
     {
-        $request->validate([
+        // 🔥 VALIDATION MANUAL (ANTI REDIRECT HTML)
+        $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:items,id',
             'quantity'   => 'required|integer|min:1'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()
+            ], 422);
+        }
 
         $cart = $this->getCart($request);
 
@@ -93,20 +102,34 @@ class CartApiController extends Controller
     }
 
     /**
-     * UPDATE CART
+     * 🔄 UPDATE CART (ANTI HTML ERROR)
      */
     public function update(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'cart_item_id' => 'required|exists:guest_carts_items,id',
             'quantity'     => 'required|integer|min:1'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()
+            ], 422);
+        }
 
         $cart = $this->getCart($request);
 
         $cartItem = Guest_carts_item::where('id', $request->cart_item_id)
             ->where('guest_cart_id', $cart->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$cartItem) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Item tidak ditemukan'
+            ], 404);
+        }
 
         $cartItem->update([
             'quantity' => $request->quantity
@@ -119,7 +142,7 @@ class CartApiController extends Controller
     }
 
     /**
-     * DELETE CART
+     * ❌ DELETE CART (ANTI ERROR)
      */
     public function delete(Request $request, $id)
     {
@@ -127,7 +150,14 @@ class CartApiController extends Controller
 
         $cartItem = Guest_carts_item::where('id', $id)
             ->where('guest_cart_id', $cart->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$cartItem) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Item tidak ditemukan'
+            ], 404);
+        }
 
         $cartItem->delete();
 

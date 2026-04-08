@@ -8,16 +8,15 @@ use App\Http\Controllers\Api\CheckoutApiController;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| PUBLIC ROUTES
 |--------------------------------------------------------------------------
-| Semua route otomatis pakai prefix /api
 */
 
-/*
-|--------------------------------------------------------------------------
-| PUBLIC ROUTES (TANPA LOGIN)
-|--------------------------------------------------------------------------
-*/
+Route::get('/debug', function () {
+    return response()->json([
+        'msg' => 'API hidup 🚀'
+    ]);
+});
 
 // 🔐 AUTH
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,37 +25,29 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/products', [ProductsApiController::class, 'index']);
 Route::get('/products/{id}', [ProductsApiController::class, 'show']);
 
-// 📲 CHECKOUT WHATSAPP (GUEST BISA)
-Route::post('/checkout/whatsapp', [CheckoutApiController::class, 'whatsapp']);
-
+/*
+|--------------------------------------------------------------------------
+| CART (GUEST + LOGIN)
+|--------------------------------------------------------------------------
+*/
+Route::get('/cart', [CartApiController::class, 'index']);
+Route::post('/cart/add', [CartApiController::class, 'add']);
+Route::post('/cart/update', [CartApiController::class, 'update']);
+Route::delete('/cart/{id}', [CartApiController::class, 'delete']);
 
 /*
 |--------------------------------------------------------------------------
-| PROTECTED ROUTES (LOGIN WAJIB)
+| CHECKOUT
 |--------------------------------------------------------------------------
 */
 
+// 📲 WA (guest boleh)
+Route::post('/checkout/whatsapp', [CheckoutApiController::class, 'whatsapp']);
+
+// 💳 MIDTRANS (login wajib)
 Route::middleware('auth:sanctum')->group(function () {
 
-    // 🔓 LOGOUT
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    /*
-    |-----------------
-    | CART (LOGIN ONLY)
-    |-----------------
-    */
-    Route::get('/cart', [CartApiController::class, 'index']);
-    Route::post('/cart/add', [CartApiController::class, 'add']);
-    Route::post('/cart/update', [CartApiController::class, 'update']);
-    Route::delete('/cart/{id}', [CartApiController::class, 'delete']);
-
-    /*
-    |-----------------
-    | CHECKOUT
-    |-----------------
-    */
-
-    // 💳 MIDTRANS (WAJIB LOGIN)
     Route::post('/checkout/midtrans', [CheckoutApiController::class, 'midtrans']);
 });

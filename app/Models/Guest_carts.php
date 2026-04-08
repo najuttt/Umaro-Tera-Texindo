@@ -13,6 +13,7 @@ class Guest_carts extends Model
     protected $fillable = [
         'session_id',
         'user_id',
+        'device_id',
         'is_locked'
     ];
 

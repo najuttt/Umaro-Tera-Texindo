@@ -8,7 +8,7 @@ class Guest_carts_item extends Model
 {
     use HasFactory;
 
-    protected $table = 'guest_cart_items'; // <--- ini penting
+    protected $table = 'guest_cart_items'; 
     protected $fillable = ['guest_cart_id','item_id','quantity'];
 
     public function guestCart()
