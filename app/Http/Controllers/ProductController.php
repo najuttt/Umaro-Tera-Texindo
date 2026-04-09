@@ -476,7 +476,6 @@ public function checkoutPage(Request $request)
             $guestCart->guestCartItems()->delete();
             $guestCart->update(['is_locked' => true]);
             
-            // ✅ GA USAH REGENERATE SESSION!
             // Cart baru otomatis dibuat pas add to cart lagi
         });
 

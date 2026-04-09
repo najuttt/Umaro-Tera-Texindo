@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Guest_carts;
+use App\Models\Item;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Midtrans\Config;
@@ -20,7 +21,7 @@ class CheckoutApiController extends Controller
         return $request->header('device_id') ?? $request->ip();
     }
 
-    // 🔥 GET CART
+    // 🔥 GET CART (LOGIN / GUEST)
     private function getCart(Request $request)
     {
         if (Auth::check()) {
@@ -63,19 +64,29 @@ class CheckoutApiController extends Controller
             ], 400);
         }
 
-        $total = $cart->guestCartItems->sum(
-            fn($i) => (int)$i->item->price * $i->quantity
-        );
-
-        // 🔥 MIDTRANS CONFIG
-        Config::$serverKey    = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized  = true;
-        Config::$is3ds        = true;
-
         DB::beginTransaction();
 
         try {
+
+            // 🔥 HITUNG TOTAL + VALIDASI STOCK
+            $total = 0;
+
+            foreach ($cart->guestCartItems as $cartItem) {
+
+                $item = Item::lockForUpdate()->find($cartItem->item_id);
+
+                if (!$item || $cartItem->quantity > $item->stock) {
+                    throw new \Exception("Stok {$item->name} tidak cukup");
+                }
+
+                $total += $item->price * $cartItem->quantity;
+            }
+
+            // 🔥 MIDTRANS CONFIG
+            Config::$serverKey    = config('services.midtrans.server_key');
+            Config::$isProduction = config('services.midtrans.is_production');
+            Config::$isSanitized  = true;
+            Config::$is3ds        = true;
 
             // 🔥 CREATE ORDER
             $order = Order::create([
@@ -89,24 +100,28 @@ class CheckoutApiController extends Controller
                 'payment_method'   => 'midtrans',
             ]);
 
-            // 🔥 SAVE ITEMS
+            $itemDetails = [];
+
+            // 🔥 SAVE ITEM + KURANGI STOCK
             foreach ($cart->guestCartItems as $cartItem) {
+
+                $item = Item::lockForUpdate()->find($cartItem->item_id);
+
+                $item->decrement('stock', $cartItem->quantity);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'item_id'  => $cartItem->item_id,
                     'quantity' => $cartItem->quantity,
                 ]);
-            }
 
-            // 🔥 MIDTRANS ITEM DETAIL
-            $itemDetails = $cart->guestCartItems->map(function ($item) {
-                return [
-                    'id'       => $item->item->id,
-                    'price'    => (int) $item->item->price,
-                    'quantity' => $item->quantity,
-                    'name'     => $item->item->name,
+                $itemDetails[] = [
+                    'id'       => $item->id,
+                    'price'    => (int) $item->price,
+                    'quantity' => $cartItem->quantity,
+                    'name'     => $item->name,
                 ];
-            })->toArray();
+            }
 
             // 🔥 SNAP TOKEN
             $snapToken = Snap::getSnapToken([
@@ -121,7 +136,7 @@ class CheckoutApiController extends Controller
                 'item_details' => $itemDetails,
             ]);
 
-            // 🔥 SAVE PAYMENT REF
+            // 🔥 SIMPAN SNAP TOKEN
             $order->update([
                 'payment_reference' => $snapToken
             ]);
@@ -156,9 +171,9 @@ class CheckoutApiController extends Controller
     public function whatsapp(Request $request)
     {
         $request->validate([
-            'customer_name'    => 'nullable|string|max:255',
-            'customer_phone'   => 'nullable|string|max:20',
-            'customer_address' => 'nullable|string|max:500',
+            'customer_name'    => 'required|string|max:255',
+            'customer_phone'   => 'required|string|max:20',
+            'customer_address' => 'required|string|max:500',
         ]);
 
         $cart = $this->getCart($request);
@@ -174,40 +189,57 @@ class CheckoutApiController extends Controller
 
         try {
 
-            $total = $cart->guestCartItems->sum(
-                fn($i) => (int)$i->item->price * $i->quantity
-            );
+            $total = 0;
+            $messageItems = "";
 
+            // 🔥 VALIDASI + HITUNG TOTAL
+            foreach ($cart->guestCartItems as $cartItem) {
+
+                $item = Item::lockForUpdate()->find($cartItem->item_id);
+
+                if (!$item || $cartItem->quantity > $item->stock) {
+                    throw new \Exception("Stok {$item->name} tidak cukup");
+                }
+
+                $total += $item->price * $cartItem->quantity;
+            }
+
+            // 🔥 CREATE ORDER
             $order = Order::create([
                 'order_code'       => Order::generateOrderCode(),
                 'user_id'          => Auth::id(),
-                'customer_name'    => $request->customer_name ?? 'Guest',
-                'customer_phone'   => $request->customer_phone ?? '-',
-                'customer_address' => $request->customer_address ?? '-',
+                'customer_name'    => $request->customer_name,
+                'customer_phone'   => $request->customer_phone,
+                'customer_address' => $request->customer_address,
                 'total_price'      => $total,
                 'status'           => 'pending',
                 'payment_method'   => 'whatsapp',
             ]);
 
-            $messageItems = "";
-
+            // 🔥 SAVE ITEM + KURANGI STOCK
             foreach ($cart->guestCartItems as $cartItem) {
+
+                $item = Item::lockForUpdate()->find($cartItem->item_id);
+
+                $item->decrement('stock', $cartItem->quantity);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'item_id'  => $cartItem->item_id,
                     'quantity' => $cartItem->quantity,
                 ]);
 
-                $messageItems .= "- {$cartItem->item->name} x{$cartItem->quantity}\n";
+                $messageItems .= "- {$item->name} x{$cartItem->quantity}\n";
             }
 
-            // 🔥 FORMAT WA
+            // 🔥 FORMAT PESAN WA
             $message = "Halo, saya mau order:\n\n";
             $message .= $messageItems;
             $message .= "\nTotal: Rp " . number_format($total, 0, ',', '.');
             $message .= "\nKode Order: {$order->order_code}";
 
-            $waUrl = "https://wa.me/6282128366815?text=" . urlencode($message);
+            $adminNumber = env('WA_ADMIN', '6282128366815');
+            $waUrl = "https://wa.me/{$adminNumber}?text=" . urlencode($message);
 
             // 🔥 CLEAR CART
             $cart->guestCartItems()->delete();
